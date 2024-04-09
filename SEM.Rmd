@@ -1,0 +1,1863 @@
+---
+title: "Lokniti Notebook"
+author: "Poorvi Iyer"
+date: "22nd May 2023"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+subtitle: test document
+---
+
+\clearpage
+
+```{r load_pkgs_data, message=FALSE, warning=FALSE, include=FALSE}
+
+library(tidyverse)
+library(dplyr) 
+library(tidyr)
+library(knitr)
+library(corrr)
+library(rcompanion)
+library(ggplot2)
+library(lubridate)
+library(haven)
+library(here)       
+library(labelled)   
+library(sjlabelled) 
+library(psych)
+library(furniture)
+library(broom)
+library(patchwork)
+library(dagitty)
+library(ggdag)
+library(scales)
+library(modelsummary)
+library(OpenMx)
+library(lavaan)
+library(semPlot)
+library(semTable)
+library(mice)
+library(MoEClust)
+library(performance)
+library(Hmisc)
+library(VIM)
+library(missForest)
+library(fastDummies)
+library(recipes)
+library(lavaanPlot)
+library(mvnormalTest)
+library(rticles)
+library(stargazer)
+library(kableExtra)
+library(DT)
+library(ggthemes)
+
+
+
+```
+
+
+```{r eval=FALSE, include=FALSE}
+dataset <- read_sav("CSDS-KAF Youth Study 2016-Data file.sav")
+
+```
+
+```{r eval=FALSE, include=FALSE}
+
+dictionary_og <- labelled::generate_dictionary(dataset)
+dictionary_og
+
+
+dataset %>%
+  ggplot(aes(x = q48a,  
+             fill = q48a)) + 
+  geom_bar() +
+  stat_count(geom = "text", 
+             aes(label = stat(count)),
+             position = position_fill(vjust = 300), colour="black") 
+
+
+type_house %>%
+  filter(!is.na(city_house_type)) %>% 
+  ggplot(aes(x = city_house_type,  
+             fill = city_house_type)) + 
+  geom_bar() +
+  stat_count(geom = "text", 
+             aes(label = stat(count)),
+             position = position_fill(vjust = 300), colour="black") 
+
+
+
+type_house %>%
+  filter(!is.na(village_house_type)) %>% 
+  ggplot(aes(x = village_house_type,  
+             fill = village_house_type)) + 
+  geom_bar() +
+  stat_count(geom = "text", 
+             aes(label = stat(count)),
+             position = position_fill(vjust = 300), colour="black")     
+
+
+type_house %>%
+  filter(!is.na(house_type)) %>% 
+  ggplot(aes(x = house_type,  
+             fill = house_type)) + 
+  geom_bar() +
+  stat_count(geom = "text", 
+             aes(label = stat(count)),
+             position = position_fill(vjust = 300), colour="black") 
+
+type_house %>%
+  furniture::table1(house_type, output = "markdown")
+
+```
+
+Creating a data frame of useful stuff called testing123
+
+```{r eval=FALSE, include=FALSE}
+testing123 <- dataset %>%
+  dplyr::select(q1, q2, q3, q4, q13c, q13d, q22b, q22c, q22d, q23a, q23b, q25b,
+                q25ba, q25c, q25ca, q25d, q25da, q32, q35a, q35d, q35e, q36a,
+                q36b, q36c, q36d, q42a, q42b, q42c, q42d, q42g, q45, q46a, q46b,
+                q46c, q46d, q46e, q46f, q48b, q48d, q61a, q61b, 
+                q61c, q61d, q62a, q62b, q62c, q66, z2, z3a, z3b, 
+                z3c, z4a, z6, z6a, z6b, z7_a, z10) %>%
+  mutate(age = ifelse(q2 == 98, NA, q2), 
+         live_with = ifelse(q3 == 8, NA, q3), 
+         edu = ifelse(q4 == 9, NA, q4),
+         worry_fam_tradition = ifelse(q13c == 8, NA, q13c),
+         worry_fam_prob = ifelse(q13d == 8, NA, q13d),
+         fam_influence_careeredu = ifelse(q23a == 8, NA, q23a), 
+         fam_influence_marriage = ifelse(q23b == 8, NA, q23b),
+         caste_discrim_reason = ifelse(q25ba == 99, NA, q25ba),
+         gender_discrim_reason = ifelse(q25ca == 99, NA, q25ca),
+         religion_discrim_reason = ifelse(q25da == 99, NA, q25da),
+         married = ifelse(q32 == 9, NA, q32),
+         neighbour_discomfort_meat = ifelse(q42a == 8, NA, q42a),
+         neighbour_discomfort_caste = ifelse(q42b == 8, NA, q42b),
+         neighbour_discomfort_alcohol = ifelse(q42c == 8, NA, q42c),
+         neighbour_discomfort_religion = ifelse(q42d == 8, NA, q42d),
+         neighbour_discomfort_livein = ifelse(q42g == 8, NA, q42g),
+         religion = ifelse(q45 == 9, NA, q45),
+         rel_puja = ifelse(q46a == 8, NA, q46a),
+         rel_song = ifelse(q46b == 8, NA, q46b),
+         rel_fast = ifelse(q46c == 8, NA, q46c),
+         rel_temple = ifelse(q46d == 8, NA, q46d),
+         rel_tv = ifelse(q46e == 8, NA, q46e),
+         rel_book = ifelse(q46f == 8, NA, q46f),
+         pride_caste = ifelse(q48b == 8, NA, q48b),
+         pride_religion = ifelse(q48d == 8, NA, q48d),
+         res_contd_scst_gov = ifelse(q61a == 8, NA, q61a),
+         res_contd_scst_uni = ifelse(q61b == 8, NA, q61b),
+         res_contd_obc_gov = ifelse(q61c == 8, NA, q61c),
+         res_contd_obc_uni = ifelse(q61d == 8, NA, q61d),
+         res_impl_scst_priv = ifelse(q62a == 8, NA, q62a),
+         res_impl_obc_priv = ifelse(q62b == 8, NA, q62b),
+         res_impl_mus_gov = ifelse(q62c == 8, NA, q62c),
+         influenced_by = ifelse(q66 == 98, NA, q66),
+         veg = ifelse(z2 == 8, NA, z2),
+         friend_religion = ifelse(z3a == 8, NA, z3a), 
+         friend_caste = ifelse(z3b == 8, NA, z3b), 
+         friend_gender = ifelse(z3c == 8, NA, z3c), 
+         caste = ifelse(z4a == 9, NA, z4a),
+         city_house_type = ifelse(z6a == 9, NA, z6a),
+         village_house_type = ifelse(z6b == 9, NA, z6b)) %>%
+  transmute(gender = as_factor(q1), 
+            age = as_numeric(age), 
+            live_with = as_factor(live_with),
+            edu = as_factor(edu),
+            worry_fam_tradition = as_factor(worry_fam_tradition),
+            worry_fam_prob = as_factor(worry_fam_prob),
+            discuss_fam_career = as_factor(q22b),
+            discuss_fam_relationships = as_factor(q22c),
+            discuss_fam_marriage = as_factor(q22d),
+            fam_influence_careeredu = as_factor(fam_influence_careeredu),
+            fam_influence_marriage = as_factor(fam_influence_marriage),
+            caste_discrim = as_factor(q25b),
+            caste_discrim_reason = as_factor(caste_discrim_reason),
+            gender_discrim = as_factor(q25c),
+            gender_discrim_reason = as_factor(gender_discrim_reason),
+            religion_discrim = as_factor(q25d),
+            religion_discrim_reason = as_factor(religion_discrim_reason),
+            married = as_factor(married),
+            women_no_jobs = as_factor(q35a),
+            wife_listen_hub = as_factor(q35d), 
+            girl_no_jeans = as_factor(q35e),
+            rw_intercaste_marriage = as_factor(q36a),
+            rw_interrel_marriage = as_factor(q36b),
+            rw_livein = as_factor(q36c),
+            rw_dating = as_factor(q36d),
+            neighbour_discomfort_meat = as_factor(neighbour_discomfort_meat),
+            neighbour_discomfort_caste = as_factor(neighbour_discomfort_caste),
+            neighbour_discomfort_alcohol = as_factor(neighbour_discomfort_alcohol),
+            neighbour_discomfort_religion = as_factor(neighbour_discomfort_religion),
+            neighbour_discomfort_livein = as_factor(neighbour_discomfort_livein),
+            religion = as_factor(religion),
+            rel_puja = as_factor(rel_puja),
+            rel_song = as_factor(rel_song),
+            rel_fast = as_factor(rel_fast),
+            rel_temple = as_factor(rel_temple),
+            rel_tv = as_factor(rel_tv),
+            rel_book = as_factor(rel_book),
+            pride_caste = as_factor(pride_caste),
+            pride_religion = as_factor(pride_religion),
+            res_contd_scst_gov = as_factor(res_contd_scst_gov),
+            res_contd_scst_uni = as_factor(res_contd_scst_uni),
+            res_contd_obc_gov = as_factor(res_contd_obc_gov),
+            res_contd_obc_uni = as_factor(res_contd_obc_uni),
+            res_impl_scst_priv = as_factor(res_impl_scst_priv),
+            res_impl_obc_priv = as_factor(res_impl_obc_priv),
+            res_impl_mus_gov = as_factor(res_impl_mus_gov),
+            influenced_by = as_factor(influenced_by),
+            friend_religion = as_factor(friend_religion), 
+            friend_caste = as_factor(friend_caste),
+            friend_gender = as_factor(friend_gender),
+            caste = as_factor(caste),
+            veg = as_factor(veg),
+            type_of_area = as_factor(z6),
+            city_house_type = as_factor(city_house_type), 
+            village_house_type = as_factor(village_house_type),
+            total_house_members = as_factor(z7_a), 
+            household_inc = as_numeric(z10)) %>%
+  mutate(gender = fct_recode(gender, "Male" = "1", "Female" = "2")) %>%
+  mutate(live_with = fct_recode(live_with, "With parents" = "1", 
+                                "Other" = "2", 
+                                "Other" = "3", 
+                                "Other" = "4", 
+                                "Other" = "5", 
+                                "Other" = "6")) %>%
+  mutate(edu = fct_recode(edu, "Below Primary or Illiterate" = "0", 
+                          "Below Primary or Illiterate" = "1", 
+                          "Primary pass or Middle pass" = "2", 
+                          "Primary pass or Middle pass" = "3", 
+                          "Matric pass" = "4",
+                          "Intermediate/College no degree" = "5", 
+                          "Graduate or equivalent" = "6", 
+                          "Post Graduate or Professional Degree" = "7", 
+                          "Post Graduate or Professional Degree" = "8")) %>%
+  mutate(worry_fam_tradition = fct_recode(worry_fam_tradition, "Quite a lot" = "1", 
+                                          "Somewhat" = "2", 
+                                          "Very little" = "3",
+                                          "Not at all" = "4")) %>%
+  mutate(worry_fam_prob = fct_recode(worry_fam_prob, "Quite a lot" = "1",
+                                     "Somewhat" = "2",
+                                     "Very little" = "3",
+                                     "Not at all" = "4")) %>%
+  mutate(discuss_fam_career = fct_recode(discuss_fam_career, "Often" = "1",
+                                         "Sometimes" = "2",
+                                         "Very-less" = "3",
+                                         "Never" ="4",
+                                         "Felt-shy" = "5",
+                                         "Can't say" = "8")) %>%
+  mutate(discuss_fam_relationships = fct_recode(discuss_fam_relationships, "Often" = "1",
+                                         "Sometimes" = "2",
+                                         "Very-less" = "3",
+                                         "Never" ="4",
+                                         "Felt-shy" = "5",
+                                         "Can't say" = "8")) %>%
+  mutate(discuss_fam_marriage = fct_recode(discuss_fam_marriage, "Often" = "1",
+                                         "Sometimes" = "2",
+                                         "Very-less" = "3",
+                                         "Never" ="4",
+                                         "Felt-shy" = "5",
+                                         "Can't say" = "8")) %>%
+  mutate(fam_influence_careeredu = fct_recode(fam_influence_careeredu, "A lot" = "1", 
+                                               "Some" = "2", 
+                                               "Very little" = "3",
+                                              "Not at all" = "4")) %>%
+  mutate(fam_influence_marriage = fct_recode(fam_influence_marriage, "A lot" = "1", 
+                                             "Some" = "2", 
+                                             "Very little" = "3",
+                                             "Not at all" = "4")) %>%
+  mutate(caste_discrim = fct_recode(caste_discrim, "No" = "1",
+                                    "Yes" = "2"))%>%
+  mutate(gender_discrim = fct_recode(gender_discrim, "No" = "1",
+                                    "Yes" = "2"))%>%
+  mutate(religion_discrim = fct_recode(religion_discrim, "No" = "1",
+                                    "Yes" = "2"))%>%
+  mutate(married = fct_recode(married, "Married" = "1", 
+                              "Married" = "2", 
+                              "Not married" = "3", 
+                              "Not married" = "4",
+                              "Not married" = "5", 
+                              "Not married" = "6", 
+                              "Not married" = "7", 
+                              "Not married" = "8")) %>%
+  mutate(women_no_jobs = fct_recode(women_no_jobs, "Fully agree" = "1", 
+                                    "Somewhat agree" = "2", 
+                                    "Somewhat disagree" = "3",
+                                 "Fully disagree" = "4", 
+                                 "No opinion" = "8")) %>%
+  mutate(wife_listen_hub = fct_recode(wife_listen_hub, "Fully agree" = "1", 
+                                      "Somewhat agree" = "2", 
+                                      "Somewhat disagree" = "3",
+                                      "Fully disagree" = "4", 
+                                      "No opinion" = "8")) %>%
+  mutate(girl_no_jeans = fct_recode(girl_no_jeans, "Fully agree" = "1", 
+                                    "Somewhat agree" = "2", 
+                                    "Somewhat disagree" = "3",
+                                    "Fully disagree" = "4", 
+                                    "No opinion" = "8")) %>%
+  mutate(rw_intercaste_marriage = fct_recode(rw_intercaste_marriage, "Right" = "1",
+                                             "Somewhat right" = "2",
+                                             "Wrong" = "3",
+                                             "Can't say" = "8")) %>%
+  mutate(rw_interrel_marriage = fct_recode(rw_interrel_marriage, "Right" = "1",
+                                             "Somewhat right" = "2",
+                                             "Wrong" = "3",
+                                             "Can't say" = "8")) %>%
+  mutate(rw_livein = fct_recode(rw_livein, "Right" = "1",
+                                             "Somewhat right" = "2",
+                                             "Wrong" = "3",
+                                             "Can't say" = "8")) %>%
+  mutate(rw_dating = fct_recode(rw_dating, "Right" = "1",
+                                             "Somewhat right" = "2",
+                                             "Wrong" = "3",
+                                             "Can't say" = "8")) %>%
+  mutate(neighbour_discomfort_meat = fct_recode(neighbour_discomfort_meat, 
+                                                "No" = "1", 
+                                                "Yes" = "2", 
+                                                "Maybe" = "3")) %>%
+  mutate(neighbour_discomfort_caste = fct_recode(neighbour_discomfort_caste, 
+                                                "No" = "1", 
+                                                "Yes" = "2", 
+                                                "Maybe" = "3")) %>%
+  mutate(neighbour_discomfort_alcohol = fct_recode(neighbour_discomfort_alcohol, 
+                                                "No" = "1", 
+                                                "Yes" = "2", 
+                                                "Maybe" = "3")) %>%
+  mutate(neighbour_discomfort_religion = fct_recode(neighbour_discomfort_religion, 
+                                                "No" = "1", 
+                                                "Yes" = "2", 
+                                                "Maybe" = "3")) %>%
+  mutate(neighbour_discomfort_livein = fct_recode(neighbour_discomfort_livein, 
+                                                "No" = "1", 
+                                                "Yes" = "2", 
+                                                "Maybe" = "3")) %>%
+  mutate(religion = fct_recode(religion, "Hindu" = "1", "Muslim" = "2", "Christian" = "3", 
+                               "Sikh" = "4", "Buddhist/Neobuddhist" = "5",
+                               "Jain" = "6", "No religion" = "7", "Others" = "8")) %>%
+  mutate(rel_puja = fct_recode(rel_puja, "Regularly" = "1", "Sometimes" = "2",
+                               "Only on festivals" = "3", "Never" = "4")) %>%
+  mutate(rel_song = fct_recode(rel_song, "Regularly" = "1", "Sometimes" = "2",
+                               "Only on festivals" = "3", "Never" = "4")) %>%
+  mutate(rel_fast = fct_recode(rel_fast, "Regularly" = "1", "Sometimes" = "2",
+                               "Only on festivals" = "3", "Never" = "4")) %>%
+  mutate(rel_temple = fct_recode(rel_temple, "Regularly" = "1", "Sometimes" = "2",
+                               "Only on festivals" = "3", "Never" = "4")) %>%
+  mutate(rel_tv = fct_recode(rel_tv, "Regularly" = "1", "Sometimes" = "2",
+                               "Only on festivals" = "3", "Never" = "4")) %>%
+  mutate(rel_book = fct_recode(rel_book, "Regularly" = "1", "Sometimes" = "2",
+                               "Only on festivals" = "3", "Never" = "4")) %>%
+  mutate(pride_caste = fct_recode(pride_caste, "Rank 1" = "1",
+                                  "Rank 2" = "2",
+                                  "Rank 3" = "3",
+                                  "Rank 4" = "4")) %>%
+  mutate(pride_religion = fct_recode(pride_religion, "Rank 1" = "1",
+                                  "Rank 2" = "2",
+                                  "Rank 3" = "3",
+                                  "Rank 4" = "4")) %>%
+  mutate(influenced_by = fct_recode(influenced_by, "Family" = "1", 
+                                    "Family" = "2", 
+                                    "Family" = "3", 
+                                    "Family" = "4",
+                                    "Other" = "5", 
+                                    "Family" = "6", 
+                                    "Other" = "7", 
+                                    "Other" = "8",
+                                    "Other" = "9", 
+                                    "Other" = "10", 
+                                    "Other" = "11")) %>%
+  mutate(friend_religion = fct_recode(friend_religion, "No" = "1", "Yes" = "2")) %>%
+  mutate(friend_caste = fct_recode(friend_caste, "No" = "1", "Yes" = "2")) %>%
+  mutate(friend_gender = fct_recode(friend_gender, "No" = "1", "Yes" = "2")) %>%
+  mutate(caste = fct_recode(caste, "SC/ST" = "1", "SC/ST" = "2", 
+                            "Other Backward Classes (OBC)" = "3", "Others" = "4")) %>%
+  mutate(type_of_area = fct_recode(type_of_area, "Village" = "1", 
+                                   "Town" = "2", 
+                                   "City" = "3", 
+                                   "Metropolis" = "4")) %>%
+  mutate(veg = fct_recode(veg, "Pure vegetarian" = "1",
+                                     "Eggetarian" = "2",
+                                     "Non-vegetarian" = "3")) %>%
+  mutate(total_house_members_cat = fct_recode(total_house_members, "Small" = "1", "Small" = "2", 
+                                       "Small" = "3", "Medium" = "4", "Medium" = "5", "Medium" = "6",
+                                       "Large" = "7", "Large" = "8", "Large" = "9")) %>%
+  mutate(city_house_type = fct_recode(city_house_type, 
+                                      "House/Flat/Bunglow" = "1", 
+                                      "House/Flat with 5 or more rooms" = "2",
+                                      "House/Flat with 4 rooms" = "3",
+                                      "House/Flat with 3 rooms" = "4",
+                                      "House/Flat with 2 rooms" = "5",
+                                      "House with 1 room" = "6",
+                                      "Mainly Kutcha house in the city" = "7",
+                                      "Slum/Jhuggi Jhopri" = "8")) %>%
+  mutate(village_house_type = fct_recode(village_house_type, 
+                                      "Village Pucca" = "1", 
+                                      "Village Pucca-kutcha" = "2",
+                                      "Village Kutcha/Mud houses" = "3",
+                                      "Village Hut" = "4")) %>%
+  mutate(house_type = coalesce(city_house_type, village_house_type)) %>%
+  mutate(house_type_num = recode(house_type, "House/Flat/Bunglow" = 1,
+                                 "House/Flat with 5 or more rooms" = 2, 
+                                 "House/Flat with 4 rooms" = 3,
+                                 "House/Flat with 3 rooms" = 4,
+                                 "House/Flat with 2 rooms" = 5,
+                                 "House with 1 room" = 6,
+                                 "Mainly Kutcha house in the city" = 7,
+                                 "Slum/Jhuggi Jhopri" = 8,
+                                 "Village Pucca" = 9, 
+                                 "Village Pucca-kutcha" = 10,
+                                 "Village Kutcha/Mud houses" = 11,
+                                 "Village Hut" = 12))
+
+
+# mutate(city_house_type = fct_recode(city_house_type, 
+  #                                    "tcm large house" = "1", 
+   #                                   "tcm large house" = "2",
+    #                                  "tcm large house" = "3",
+     #                                 "tcm large house" = "4",
+      #                                "tcm small to medium house" = "5",
+       #                               "tcm small to medium house" = "6",
+        #                              "tcm semi pucca or slum" = "7",
+         #                             "tcm semi pucca or slum" = "8")) %>%
+#  mutate(village_house_type = fct_recode(village_house_type, 
+ #                                     "Village pucca" = "1", 
+  #                                    "Village pucca-kutcha" = "2",
+   #                                   "Village mud houses or huts" = "3",
+    #                                  "Village mud houses or huts" = "4")) %>%
+
+
+```
+
+
+```{r include=FALSE}
+
+# saveRDS(testing123, file="cleandata.Rda")
+
+cleandat <- readRDS(file="cleandata.Rda")
+
+# practice code for generating graphs for checks as needed
+
+cleandat %>%
+filter(!is.na(religion)) %>%
+ggplot(aes(x = religion,
+         fill = religion)) +
+geom_bar() +
+stat_count(geom = "text",
+         aes(label = stat(count)),
+        position = position_fill(vjust = 300), colour="black")
+
+
+
+```
+
+
+```{r}
+
+# ex <- cleandat %>%
+#   dplyr::select(gender, caste, edu, married, veg, type_of_area, total_house_members_cat)
+# 
+# names(ex)
+# 
+# ex_long <- ex %>%
+#   mutate(across(everything(), as.factor)) %>% # Convert all columns to factor
+#   gather(variable, value, everything()) %>%
+#    mutate(value = str_wrap(value, width = 10)) # Wrap labels to reduce width
+
+# saveRDS(ex_long, file = "exog_descriptives.Rda")
+
+ex_d <- readRDS("exog_descriptives.Rda")
+
+ex_d <- ex_d %>%
+  count(variable, value) %>%
+  group_by(variable) %>%
+  mutate(Percentage = n / sum(n) * 100) %>%
+  arrange(variable, desc(n)) %>%
+  filter(!is.na(value)) %>%
+  rename(Variable = variable,
+         Category = value,
+         N = n) %>%
+  mutate(
+    Variable = case_when(
+      Variable == "edu" ~ "Highest education level",
+      Variable == "married" ~ "Married",
+      Variable == "veg" ~ "Dietary preferences",
+      Variable == "type_of_area" ~ "Type of area",
+      Variable == "total_house_members_cat" ~ "Family size",
+      Variable == "gender" ~ "Gender",
+      Variable == "caste" ~ "Caste",
+      TRUE ~ as.character(Variable) # If there are any other variables not in the renaming list
+    ))
+
+obj <- ex_d
+saveRDS(obj, file = "obj_descriptives.Rda")
+
+
+med <- cleandat %>%
+  dplyr::select(worry_fam_tradition, worry_fam_prob,
+                pride_caste, pride_religion, friend_caste, friend_gender, friend_religion)
+
+med_long <- med %>%
+  mutate(across(everything(), as.factor)) %>% # Convert all columns to factor
+  gather(variable, value, everything()) %>%
+   mutate(value = str_wrap(value, width = 10)) # Wrap labels to reduce width
+
+saveRDS(med_long, file = "med_descriptives.Rda")
+
+med_d <- readRDS("med_descriptives.Rda")
+
+med <- med_long %>%
+  count(variable, value) %>%
+  group_by(variable) %>%
+  mutate(Percentage = n / sum(n) * 100) %>%
+  arrange(variable, desc(n)) %>%
+  filter(!is.na(value)) %>%
+  rename(Variable = variable,
+         Category = value,
+         N = n) %>%
+  mutate(
+    Variable = case_when(
+      Variable == "friend_caste" ~ "Friends from another caste",
+      Variable == "friend_gender" ~ "Friends from another gender",
+      Variable == "friend_religion" ~ "Friends from another religion",
+      Variable == "pride_caste" ~ "Caste pride",
+      Variable == "pride_religion" ~ "Religious pride",
+      Variable == "worry_fam_prob" ~ "Worry about family problems",
+      Variable == "worry_fam_tradition" ~ "Worry about family tradition",
+      TRUE ~ as.character(Variable) # If there are any other variables not in the renaming list
+    ))
+
+saveRDS(med, file = "med_descriptives.Rda")
+
+
+outcome <- cleandat %>%
+  dplyr::select(women_no_jobs, wife_listen_hub, girl_no_jeans,
+                rw_intercaste_marriage, rw_interrel_marriage, rw_livein, rw_dating,
+                neighbour_discomfort_meat, neighbour_discomfort_caste, neighbour_discomfort_alcohol, neighbour_discomfort_religion,
+                neighbour_discomfort_livein)
+
+outcome_long <- outcome %>%
+  mutate(across(everything(), as.factor)) %>% # Convert all columns to factor
+  gather(variable, value, everything()) %>%
+   mutate(value = str_wrap(value, width = 10)) # Wrap labels to reduce width
+# 
+# saveRDS(outcome_long, file = "outcome_descriptives.Rda")
+
+out_d <- readRDS("outcome_descriptives.Rda")
+
+out <- outcome %>%
+  count(variable, value) %>%
+  group_by(variable) %>%
+  mutate(Percentage = n / sum(n) * 100) %>%
+  filter(!is.na(value)) %>%
+  mutate(
+    Variable = case_when(
+      variable == "girl_no_jeans" ~ "Girls should not wear jeans",
+      variable == "wife_listen_hub" ~ "Wives should always listen to their husbands",
+      variable == "women_no_jobs" ~ "Women should not work after marriage",
+      variable == "rw_intercaste_marriage" ~ "Intercaste marriage - right or wrong?",
+      variable == "rw_interrel_marriage" ~ "Inter-religious marriage - right or wrong?",
+      variable == "rw_dating" ~ "Dating - right or wrong?",
+      variable == "rw_livein" ~ "Live-in relationships - right or wrong?",
+      variable == "neighbour_discomfort_caste" ~ "Neighbour discomfort - different caste",
+      variable == "neighbour_discomfort_religion" ~ "Neighbour discomfort - different religion",
+      variable == "neighbour_discomfort_meat" ~ "Neighbour discomfort - meat eater",
+      variable == "neighbour_discomfort_alcohol" ~ "Neighbour discomfort - drinks alcohol",
+      variable == "neighbour_discomfort_livein" ~ "Neighbour discomfort - in a live-in relationship",
+      TRUE ~ as.character(variable) # If there are any other variables not in the renaming list
+    )) %>%
+  ungroup() %>%
+  mutate(Variable = factor(Variable, levels = c("Girls should not wear jeans", 
+  "Wives should always listen to their husbands", 
+  "Women should not work after marriage", 
+  "Intercaste marriage - right or wrong?", 
+  "Inter-religious marriage - right or wrong?", 
+  "Dating - right or wrong?", 
+  "Live-in relationships - right or wrong?", 
+  "Neighbour discomfort - different caste", 
+  "Neighbour discomfort - different religion", 
+  "Neighbour discomfort - meat eater", 
+  "Neighbour discomfort - drinks alcohol", 
+  "Neighbour discomfort - in a live-in relationship"))) %>%
+  arrange(Variable, desc(n)) %>%
+  rename(Category = value, N = n) %>%
+  dplyr::select(5,2:4)
+
+
+saveRDS(out, file = "out_descriptives.Rda")
+
+
+
+
+
+```
+
+
+```{r}
+
+# need to update this with a column where I describe the variables
+
+# create the data frame
+exog_tab <- data.frame(
+  questionnaire_item = c("Gender", "Are you married?", "Household Information - What type of area is it? (Town)", "Household Information - What type of area is it? (City)", "Household Information - What type of area is it? (Metro)", "What is the total number of family members living in your house (above 18 years) - 4 to 6 members", "What is the total number of family members living in your house (above 18 years) - 4 to 7 members or more", "Are you a pure vegetarian, a vegetarian but eat eggs or are you a non-vegetarian who also eats chicken, meat or fish? - Pure vegetarian", "Are you a pure vegetarian, a vegetarian but eat eggs or are you a non-vegetarian who also eats chicken, meat or fish? - Vegetarian but eat egg", "And what is your caste group? - Other Backward Classes (OBC)", "And what is your caste group? - Other", "Up to what level have you studied? - Primary pass or Middle pass", "Up to what level have you studied? - Matric pass", "Up to what level have you studied? - Intermediate/College no degree", "Up to what level have you studied? - Graduate or equivalent", "Up to what level have you studied? - Post Graduate or Professional Degree"),
+  exog_var_name = c("gender", "married", "town", "city", "metro", "medium_fam_size", "large_fam_size", "pure_veg", "veg_with_eggs", "obc", "open_cat_caste", "primary_middle_edu", "matric_edu", "high_school_edu", "grad_edu", "post_grad_edu"),
+  type = c("Dummy/binary", "Dummy/binary", "Dummy/binary", "Dummy/binary", "Dummy/binary", "Dummy/binary", "Dummy/binary", "Dummy/binary", "Dummy/binary", "Dummy/binary", "Dummy/binary", "Dummy/binary", "Dummy/binary", "Dummy/binary", "Dummy/binary", "Dummy/binary"),
+  categories = c("Male = 0, Female = 1", "Married = 1, Not married = 0", "Dummy, ref cat = village", "Dummy, ref cat = village", "Dummy, ref cat = village", "Dummy, ref cat = small_fam_size", "Dummy, ref cat = small_fam_size", "Dummy, ref cat = non_veg", "Dummy, ref cat = non_veg", "Dummy, ref cat = sc, st (Dalit)", "Dummy, ref cat = st. st (Dalit)", "Dummy, ref cat = not educated", "Dummy, ref cat = not educated", "Dummy, ref cat = not educated", "Dummy, ref cat = not educated", "Dummy, ref cat = not educated")
+)
+
+
+
+
+# create the data frame
+med_tab <- data.frame(
+  mediator_var_name = c("worry_fam_tradition", "worry_fam_prob", "pride_caste", "friend_religion", "friend_caste", "friend_gender"),
+  type = c("Ordered", "Ordered", "Ordered", "Dummy/binary", "Dummy/binary", "Dummy/binary"),
+  categories = c("\"Not at all\" = 1, \"Very little\" = 2, \"Somewhat\" = 3, \"Quite a lot\" = 4",
+                 "\"Not at all\" = 1, \"Very little\" = 2, \"Somewhat\" = 3, \"Quite a lot\" = 4",
+                 "\"Rank 4\" = 1 , \"Rank 3\" = 2, \"Rank 2\" = 3, \"Rank 1\" = 4",
+                 "\"Yes\" = 0, \"No\" = 1",
+                 "\"Yes\" = 0, \"No\" = 1",
+                 "\"Yes\" = 0, \"No\" = 1")
+  )
+
+
+endog_tab <- data.frame(
+  outcome_var_name = c("women_no_jobs", "wife_listen_hub", "girl_no_jeans", "rw_intercaste_marriage", "rw_interrel_marriage", "rw_livein", "rw_dating", "neighbour_discomfort_meat", "neighbour_discomfort_caste", "neighbour_discomfort_alcohol", "neighbour_discomfort_religion", "neighbour_discomfort_livein", "rel_puja", "rel_song", "rel_fast", "rel_temple", "rel_tv", "rel_book"),
+  type = c("Ordered", "Ordered", "Ordered", "Ordered", "Ordered", "Ordered", "Ordered", "Ordered", "Ordered", "Ordered", "Ordered", "Ordered", "Ordered", "Ordered", "Ordered",
+           "Ordered", "Ordered", "Ordered"),
+  categories = c("\"Fully disagree\" = 1, \"Somewhat disagree\" = 2, \"No opinion\" = 3, \"Somewhat agree\" = 4, \"Fully agree\" = 5",
+                 "\"Fully disagree\" = 1, \"Somewhat disagree\" = 2, \"No opinion\" = 3, \"Somewhat agree\" = 4, \"Fully agree\" = 5",
+                 "\"Fully disagree\" = 1, \"Somewhat disagree\" = 2, \"No opinion\" = 3, \"Somewhat agree\" = 4, \"Fully agree\" = 5",
+                 "\"Right\" = 1, \"Somewhat right\" = 2, \"Can't say\" = 3, \"Wrong\" = 4",
+                 "\"Right\" = 1, \"Somewhat right\" = 2, \"Can't say\" = 3, \"Wrong\" = 4",
+                 "\"Right\" = 1, \"Somewhat right\" = 2, \"Can't say\" = 3, \"Wrong\" = 4",
+                 "\"Right\" = 1, \"Somewhat right\" = 2, \"Can't say\" = 3, \"Wrong\" = 4",
+                 "\"No\" = 1 , \"Maybe\" = 2, \"Yes\" = 3",
+                 "\"No\" = 1 , \"Maybe\" = 2, \"Yes\" = 3",
+                 "\"No\" = 1 , \"Maybe\" = 2, \"Yes\" = 3",
+                 "\"No\" = 1 , \"Maybe\" = 2, \"Yes\" = 3",
+                 "\"No\" = 1 , \"Maybe\" = 2, \"Yes\" = 3",
+                 "\"Never\" = 1, \"Only on festivals\" = 2, \"Sometimes\" = 3, \"Regularly\" = 4",
+                 "\"Never\" = 1, \"Only on festivals\" = 2, \"Sometimes\" = 3, \"Regularly\" = 4",
+                 "\"Never\" = 1, \"Only on festivals\" = 2, \"Sometimes\" = 3, \"Regularly\" = 4",
+                 "\"Never\" = 1, \"Only on festivals\" = 2, \"Sometimes\" = 3, \"Regularly\" = 4",
+                 "\"Never\" = 1, \"Only on festivals\" = 2, \"Sometimes\" = 3, \"Regularly\" = 4",
+                 "\"Never\" = 1, \"Only on festivals\" = 2, \"Sometimes\" = 3, \"Regularly\" = 4")
+)
+
+
+
+
+```
+
+```{r}
+
+# create a pretty table with color
+exog_tab %>%
+  kable(caption = "Exogenous Variable Categories", format = "html", align = c("l", "l", "l", "l")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) %>%
+  row_spec(0, bold = TRUE, color = "white", background = "#0073C2") %>%
+  column_spec(c(1, 2, 3, 4), background = "#E0E0E0") %>%
+  add_header_above(c(" " = 4)) %>%
+  collapse_rows(columns = 1, valign = "top")
+
+
+
+med_tab %>%
+  knitr::kable(caption = "Mediator Variable Categories", format = "html", align = c("l", "l", "l")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) %>%
+  row_spec(0, bold = T, color = "white", background = "#E74C3C") %>%
+  column_spec(c(1, 2, 3), background = "#FADBD8") %>%
+  add_header_above(c(" " = 1, "Type" = 2)) %>%
+  collapse_rows(columns = 1, valign = "top")
+
+
+
+endog_tab %>%
+  knitr::kable(caption = "Outcome Variable Categories", format = "html", align = c("l", "l", "l")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) %>%
+  row_spec(0, bold = T, color = "white", background = "#27AE60") %>%
+  column_spec(c(1, 2, 3), background = "#D1F2EB") %>%
+  add_header_above(c(" " = 1, "Type" = 2)) %>%
+  collapse_rows(columns = 1, valign = "top")
+
+
+```
+
+Preliminary analysis and descriptive analysis:
+
+For the SEM analysis, all incomplete cases were removed from the subseted data for this particular model (following lavaan's default listwise deletion practice). LIST descriptive table with mean and SD of all variables
+
+
+
+Specifics of modelling choices:
+
+Driven by lavaan requirements:
+- Treatment of exog - all are dummies/continuous
+- Treatment of endog - all are ordered, even though there is literature that argues treating it as continuous, better to treat them as ordered likert
+
+DWLS estimator for ordered data 
+
+ML has demonstrated less biased parameter estimates than asymptotic distribution-free estimation, better theoretical fit than weighted least squares and generalized least squares, and is relatively robust to deviations from normality (Finch, West, & MacKinnon, 1997; Olsson, Foss, Troye, & Howell, 2000; Yuan & Bentler, 1997) [https://oce-ovid-com.gate3.library.lse.ac.uk/article/01438461-201302000-00004/HTML]
+But ML does not run in lavaan with the ordered command
+DWLS as default with ordered data
+
+- bootstrapping with wls: results hold with very minor changes to the coefficients. Reverted back to DWLS models/estimates; less sensitive to deviations from multivariate normality than WLS. Thus, DWLS is often recommended for use with ordinal data, where the assumption of multivariate normality is likely to be violated. (try 100 boostraps and 5000 with ML and report results of models in the Appendix)
+
+INDIRECT EFFECTS
+The specified models have both direct and indirect pathways. Direct paths look at the relationship between a socioeconomic exogenous indicator (e.g., gender) and an endogenous outcome (e.g, norms around women giving deference). Indirect paths look at the same relationship, but through the latent variable fam.worry e.g., indirect effects test whether fam.worry mediates the relationship between gender and the norms around women giving deference. Across all models, I find that there is very weak evidence for indirect effects. Even in cases of statistical significance, there is very little practical significance. While the direction of the coefficient (in cases where there is statistical significance) is in line with predictions, I deem the evidence in favour of these effects to be too weak to discuss them in greater detail. Instead, I place more attention on the structural models that unpack the direct effects and that are more central to my interests in this chapter. Appendix (X) presents results from the indirect effects for the interested reader.
+
+
+MODEL 1 - MARYADA AND GENDER
+
+```{r include=FALSE}
+
+sem_maryada_data <- cleandat %>%
+  dplyr::select(gender, type_of_area, total_house_members_cat, edu, caste, married,
+                worry_fam_tradition, worry_fam_prob,
+                women_no_jobs, wife_listen_hub, girl_no_jeans) %>%
+  na.omit()
+
+#creating dummy variables
+
+town <- ifelse(sem_maryada_data$type_of_area == 'Town', 1, 0)
+city <- ifelse(sem_maryada_data$type_of_area == 'City', 1, 0)
+metro <- ifelse(sem_maryada_data$type_of_area == 'Metropolis', 1, 0)
+medium_fam_size <- ifelse(sem_maryada_data$total_house_members_cat == 'Medium', 1, 0)
+large_fam_size <- ifelse(sem_maryada_data$total_house_members_cat == 'Large', 1, 0)
+obc <- ifelse(sem_maryada_data$caste == 'Other Backward Classes (OBC)', 1, 0)
+open_cat_caste <- ifelse(sem_maryada_data$caste == 'Others', 1, 0)
+primary_middle_edu <- ifelse(sem_maryada_data$edu == 'Primary pass or Middle pass', 1, 0)
+matric_edu <- ifelse(sem_maryada_data$edu == 'Matric pass', 1, 0)
+high_school_edu <- ifelse(sem_maryada_data$edu == 'Intermediate/College no degree', 1, 0)
+grad_edu <- ifelse(sem_maryada_data$edu == 'Graduate or equivalent', 1, 0)
+post_grad_edu <- ifelse(sem_maryada_data$edu == 'Post Graduate or Professional Degree', 1, 0)
+
+
+sem_maryada_data <- data.frame(gender = sem_maryada_data$gender,
+                        married = sem_maryada_data$married,
+                        worry_fam_tradition = sem_maryada_data$worry_fam_tradition,
+                        worry_fam_prob = sem_maryada_data$worry_fam_prob,
+                        obc = obc,
+                        open_cat_caste = open_cat_caste,
+                        town = town,
+                        city = city,
+                        metro = metro,
+                        medium_fam_size = medium_fam_size,
+                        large_fam_size = large_fam_size,
+                        primary_middle_edu = primary_middle_edu,
+                        matric_edu = matric_edu,
+                        high_school_edu = high_school_edu,
+                        grad_edu = grad_edu,
+                        post_grad_edu = post_grad_edu,
+                        women_no_jobs = sem_maryada_data$women_no_jobs,
+                        wife_listen_hub = sem_maryada_data$wife_listen_hub,
+                        girl_no_jeans = sem_maryada_data$girl_no_jeans)
+
+
+
+sem_maryada_data <- sem_maryada_data %>%
+  mutate(gender = recode(gender, "Male" = 0, "Female" = 1)) %>%
+  mutate(married = recode(married, "Married" = 1, "Not married" = 0)) %>%
+  mutate(worry_fam_tradition = recode(worry_fam_tradition, "Not at all" = 1,
+                                      "Very little" = 2, "Somewhat" = 3,
+                                      "Quite a lot" = 4)) %>%
+  mutate(worry_fam_prob = recode(worry_fam_prob, "Not at all" = 1,
+                                      "Very little" = 2, "Somewhat" = 3,
+                                      "Quite a lot" = 4)) %>%
+  mutate(women_no_jobs = recode(women_no_jobs, "Fully disagree" = 1,
+                             "Somewhat disagree" = 2, "No opinion" = 3,
+                             "Somewhat agree" = 4, "Fully agree" = 5)) %>%
+  mutate(wife_listen_hub = recode(wife_listen_hub, "Fully disagree" = 1,
+                                "Somewhat disagree" = 2, "No opinion" = 3,
+                                "Somewhat agree" = 4, "Fully agree" = 5)) %>%
+  mutate(girl_no_jeans = recode(girl_no_jeans, "Fully disagree" = 1,
+                                "Somewhat disagree" = 2, "No opinion" = 3,
+                                "Somewhat agree" = 4, "Fully agree" = 5))
+
+
+sem_maryada_data <- sem_maryada_data %>%
+  mutate(worry_fam_tradition = as.ordered(worry_fam_tradition)) %>%
+  mutate(worry_fam_prob = as.ordered(worry_fam_prob)) %>%
+  mutate(women_no_jobs = as.ordered(women_no_jobs)) %>%
+  mutate(wife_listen_hub = as.ordered(wife_listen_hub)) %>%
+  mutate(girl_no_jeans = as.ordered(girl_no_jeans))
+
+
+# saveRDS(sem_maryada_data, file="maryada.Rda")
+
+# maryada <- readRDS(file="maryada.Rda")
+
+dictionary_maryada <- labelled::generate_dictionary(maryada)
+dictionary_maryada
+
+# library(foreign)
+# write.dta(maryada, "maryada.dta")
+
+# check for normality
+
+# mvnout <- mardia(sem_maryada_data[1:5000,])
+# mvnout$uv.shapiro
+
+# shapiro_maryada <- mvnout$mv.test
+
+
+```
+
+Model specification:
+
+The first model outlines the relationship between select exogenous indicators (gender, marital status, type of area where one lives in, family size, education and caste) and the belief in traditional norms of deference applicable to women and whether these relationships are mediated by the extent to which individuals worry about their family (using the latent variable fam.worry discussed previously). 
+
+It was hypothesised that being a man, being married, lower levels of education, larger family size and living in rural areas would be positively associated with worry about family and with more traditional opinions on norms applicable to women. Additionally, greater worry about family would be positively associated with more traditional opinions on norms applicable to women. Additionally, it was hypothesised that the positive association between the exogenous variables and the outcome variable would be partially (positively) mediated by worry about family. 
+
+Seeing as the outcome variable has to do with norms applicable to women, three indicators were selected for this model:
+1) women_no_jobs - women should not work after marriage
+2) wife_listen_hub - wives should always listen to their husbands
+3) girl_no_jeans - girls should not wear jeans
+All these items were measured on a Likert scale with higher values indicating greater agreement, therefore indicating more 'traditionalism'
+
+Crucially, these individual indicators seem to be tapping into something unobservable about traditional norms applicable to women, so I used them to construct a latent variable called women_norms that would act as the endogenous outcome variable in the model.  
+
+First, I examine the measurement model and then delve into the structural model:
+
+```{r include=FALSE}
+
+## Model specification
+
+measurement_maryada <- '
+  # measurement portion of model
+  fam.worry =~ worry_fam_tradition + worry_fam_prob
+  women.maryada =~ women_no_jobs + wife_listen_hub + girl_no_jeans
+  '
+
+measurement.model.fit <- cfa(measurement_maryada, data = maryada)
+summary(measurement.model.fit, fit.measures=TRUE, standardized=TRUE)
+
+
+# save standardised factor loadings in object s1
+sl <- standardizedSolution(measurement.model.fit)
+
+# extract from s1 standardised estimates (est.std) form only parent conditional regard
+sl <- sl$est.std[sl$lhs == "fam.worry"]
+
+# calculate the residual variances
+re <- 1 - sl^2
+
+# calculate the composite reliability
+sum(sl)^2 / (sum(sl)^2 + sum(re))
+
+# Composite reliability - women.maryada - -.7869
+# Composite reliability - fam.worry -.7799
+
+
+maryada_model <- '
+  # measurement portion of model
+  fam.worry =~ worry_fam_tradition + worry_fam_prob
+  women.maryada =~ women_no_jobs + wife_listen_hub + girl_no_jeans
+  # structural portion of model
+  fam.worry ~ a*gender
+  fam.worry ~ b*married
+  fam.worry ~ c*town
+  fam.worry ~ d*city
+  fam.worry ~ e*metro
+  fam.worry ~ f*medium_fam_size
+  fam.worry ~ g*large_fam_size
+  fam.worry ~ h*primary_middle_edu
+  fam.worry ~ i*matric_edu
+  fam.worry ~ j*high_school_edu
+  fam.worry ~ k*grad_edu
+  fam.worry ~ l*post_grad_edu
+  fam.worry ~ m*obc
+  fam.worry ~ n*open_cat_caste
+  women.maryada ~ fam.worry + gender + married + town + city + metro + medium_fam_size + large_fam_size +
+  primary_middle_edu + matric_edu + high_school_edu + grad_edu + post_grad_edu + obc + open_cat_caste
+  '
+
+#by default, lavaan uses the marker method so there is no need to multiply the first factor by 1. std.lv = true will standardize all the latent variables
+
+fit.mod.maryada <- sem(maryada_model, data = sem_maryada_data)
+
+fit.summary <- summary(fit.mod.maryada, fit.measures=TRUE, standardized=TRUE)
+
+parameterestimates(fit.mod.maryada, boot.ci.type = "perc", standardized = TRUE)
+
+# These will run under the MLM specification
+
+fitMeasures(fit.mod.maryada, c("rmsea.scaled", "rmsea.ci.lower.scaled", "rmsea.ci.upper.scaled", "rmsea.pvalue.scaled", "cfi.scaled",     "tli.scaled","srmr"))
+
+# segregating data needed for the regressions
+
+maryada_lv_fit <- standardizedsolution (fit.mod.maryada, type = "std.all", se = TRUE, zstat = TRUE, pvalue = TRUE, ci = TRUE) %>%
+  filter (op == "=~") %>%
+  dplyr::select (LV=lhs, Item=rhs, Coefficient=est.std, ci.lower, ci.upper, SE=se, Z=z, 'p-value'=pvalue)
+
+# saveRDS(maryada_lv_fit, file="m1f.Rda")
+
+m1f <- readRDS(file="m1f.Rda")
+
+maryada_direct_effects_reg <- standardizedsolution(fit.mod.maryada, type = "std.all", se = TRUE, zstat = TRUE, pvalue = TRUE, ci = TRUE)%>%
+  filter(op == "~") %>%
+  dplyr::select(LV=lhs, Item=rhs, Coefficient=est.std, ci.lower, ci.upper, SE=se, Z=z, 'p-value'=pvalue)
+
+# saveRDS(maryada_direct_effects_reg, file="m1r.Rda")
+
+m1r <- readRDS(file="m1r.Rda")
+
+maryada_indirect_effects_reg <- standardizedsolution(fit.mod.maryada, type = "std.all", se = TRUE, zstat = TRUE, pvalue = TRUE, ci = TRUE)%>% 
+  filter(op == ":=") %>% 
+  dplyr::select(LV=lhs, Item=rhs, Coefficient=est.std, ci.lower, ci.upper, SE=se, Z=z, 'p-value'=pvalue)
+
+rsq_maryada <- parameterEstimates(fit.mod.maryada, standardized=TRUE, rsquare = TRUE) %>% 
+  filter(op == "r2") %>% 
+  dplyr::select(Item=rhs, R2 = est) 
+
+```
+
+
+```{r fig_n2, fig.cap="Maryada", fig.align='center'}
+
+knitr::include_graphics('Maryada.png')
+
+#lavaanPlot(name = "Maryada", fit.mod.maryada, coefs = TRUE)
+
+#lavaanPlot(name = "Maryada_gender", model = fit.mod.maryada, node_options = list(shape = "box", fontname = "Helvetica"), 
+           #edge_options = list(color = "purple"), coefs = TRUE, stand = TRUE, sig = .05, stars = "regress", digits = 2)
+
+```
+
+
+```{r}
+
+stargazer(m1f, summary=FALSE, type='text', rownames=FALSE, initial.zero=FALSE, digits=3, title='Factor Loadings - Gender Norms')
+
+```
+The measurement model:
+
+The measurement model consists of 2 latent variables, fam.worry and women.maryada. This output presents standardized coefficients (factor loadings) for items on latent variables (LV), confidence intervals (ci.lower, ci.upper), standard errors (SE), Z values (Wald test), and p-values testing the null hypothesis that a coefficient = 0. As we can see from the table above, all standardised factor loadings (coefficients) for the measured variables on their latent factors are significant. The size of the coefficients (β range of 0.65 - 0.75 for women.maryada and β of 0.77 and 0.99 for fam.worry) indicates that the magnitude of the relationships between items and factors are adequate. While there is no strict cutoff for the factor loading size, one rule of thumb is that factor loadings < .40 are weak and factor loadings > .60 are strong (Garson, 2010) (from curran). Furthermore, each of these latent factors demonstrated acceptable composite reliability (fam.worry = 0.78; women.maryada = 0.78). 
+
+
+```{r}
+
+stargazer(m1r, summary=FALSE, type='text', rownames=FALSE, initial.zero=FALSE, digits=3, title='SEM Regression Maryada')
+
+```
+
+The structural model:
+
+This output presents standardized regression coefficients representing relationships between independent (latent) variables the dependent latent variables, confidence intervals (ci.lower, ci.upper), standard errors (SE), Z values (Wald test), p-values testing the null hypothesis that a coefficient = 0. 
+
+At an overarching level, the relationships between the latent variable fam.worry and all the socioeconomic indicators are of low practical significance in that the coefficients themselves are miniscule. However, when considering directionality, the results are in line with what is expected. I find that being a woman is statistically significantly associated with higher levels of family worry. So is being married, and being a part of a medium or large sized family as compared to small families. Coming to negative coefficients, living in a town or metro (compared to a village, the reference category) is associated with lower levels of family worry. The coefficient for the city is also negative, but not statistically significant with a p-value of 0.515. Higher levels of education (compared to no education, the reference category) are generally associated with higher levels of family worry. However, only high school, graduate, and postgraduate education have statistically significant effects. OBC or being a part of the open caste categories as compared to being in the SC or ST caste categories are not statistically significantly associated with family worry. This could indicate that concern for family problems and traditions could transcend caste boundaries. 
+
+Coming to the results specific to women.maryada, a positive coefficient of 0.143 indicates that higher levels of family worry are associated with higher levels of women.maryada. A higher concern for family tradition and problems is associated with greater levels of agreement with traditional norms specific to women. In a similar vein, being married is associated with higher levels of women.maryada and so is being a part of a medium or large family size (as compared to a small family), with all these associations being statistically significant. Contrastingly, being female is associated with lower levels of women.maryada (-0.235) and so is living in a town, city, or metro compared to a village. Higher levels of education are generally associated with lower levels of women.maryada, but only the effects of high school, graduate, and postgraduate education are statistically significant. Being from OBC caste as compared to the SC/ST categories is associated with higher levels of women.maryada, and being from open caste category (as compared to the SC/ST categories) is associated with lower levels of women.maryada. Both effects are statistically significant but are of low practical significance.
+
+All indices of model fit are within standard/acceptable ranges. (fill in from final table). r-squared is 19.2
+
+
+```{r}
+
+stargazer(maryada_indirect_effects_reg, summary=FALSE, type='text', rownames=FALSE, initial.zero=FALSE, digits=3, title='SEM Regression Maryada - Indirect')
+
+```
+
+```{r}
+
+stargazer(rsq_maryada, summary=FALSE, type='text', rownames=FALSE, initial.zero=FALSE, digits=3, title='R-Squared Maryada')
+
+```
+
+
+
+2. MODEL ON WHO RIGHT WRONG
+
+```{r include=FALSE}
+
+
+sem_rightwrong_data <- cleandat %>%
+  dplyr::select(gender, married, edu, caste, type_of_area, total_house_members_cat,
+                worry_fam_tradition, worry_fam_prob,
+                friend_religion, friend_caste, friend_gender,
+                rw_intercaste_marriage, rw_interrel_marriage, rw_livein, rw_dating) %>%
+  na.omit()
+# 
+town <- ifelse(sem_rightwrong_data$type_of_area == 'Town', 1, 0)
+city <- ifelse(sem_rightwrong_data$type_of_area == 'City', 1, 0)
+metro <- ifelse(sem_rightwrong_data$type_of_area == 'Metropolis', 1, 0)
+medium_fam_size <- ifelse(sem_rightwrong_data$total_house_members_cat == 'Medium', 1, 0)
+large_fam_size <- ifelse(sem_rightwrong_data$total_house_members_cat == 'Large', 1, 0)
+obc <- ifelse(sem_rightwrong_data$caste == 'Other Backward Classes (OBC)', 1, 0)
+open_cat_caste <- ifelse(sem_rightwrong_data$caste == 'Others', 1, 0)
+primary_middle_edu <- ifelse(sem_rightwrong_data$edu == 'Primary pass or Middle pass', 1, 0)
+matric_edu <- ifelse(sem_rightwrong_data$edu == 'Matric pass', 1, 0)
+high_school_edu <- ifelse(sem_rightwrong_data$edu == 'Intermediate/College no degree', 1, 0)
+grad_edu <- ifelse(sem_rightwrong_data$edu == 'Graduate or equivalent', 1, 0)
+post_grad_edu <- ifelse(sem_rightwrong_data$edu == 'Post Graduate or Professional Degree', 1, 0)
+
+
+sem_rightwrong_data <- data.frame(gender = sem_rightwrong_data$gender,
+                        married = sem_rightwrong_data$married,
+                        friend_gender = sem_rightwrong_data$friend_gender,
+                        friend_caste = sem_rightwrong_data$friend_caste,
+                        friend_religion = sem_rightwrong_data$friend_religion,
+                        worry_fam_tradition = sem_rightwrong_data$worry_fam_tradition,
+                        worry_fam_prob = sem_rightwrong_data$worry_fam_prob,
+                        obc = obc,
+                        open_cat_caste = open_cat_caste,
+                        primary_middle_edu = primary_middle_edu,
+                        matric_edu = matric_edu,
+                        high_school_edu = high_school_edu,
+                        grad_edu = grad_edu,
+                        post_grad_edu = post_grad_edu,
+                        town = town,
+                        city = city,
+                        metro = metro,
+                        medium_fam_size = medium_fam_size,
+                        large_fam_size = large_fam_size,
+                        rw_intercaste_marriage = sem_rightwrong_data$rw_intercaste_marriage,
+                        rw_interrel_marriage = sem_rightwrong_data$rw_interrel_marriage,
+                        rw_livein = sem_rightwrong_data$rw_livein,
+                        rw_dating = sem_rightwrong_data$rw_dating)
+
+
+sem_rightwrong_data <- sem_rightwrong_data %>%
+  mutate(gender = recode(gender, "Male" = 0, "Female" = 1)) %>%
+  mutate(married = recode(married, "Married" = 1, "Not married" = 0)) %>%
+  mutate(friend_gender = recode(friend_gender, "No" = 1, "Yes" = 0)) %>%
+  mutate(friend_caste = recode(friend_caste, "No" = 1, "Yes" = 0)) %>%
+  mutate(friend_religion = recode(friend_religion, "No" = 1, "Yes" = 0)) %>%
+  mutate(worry_fam_tradition = recode(worry_fam_tradition, "Not at all" = 1,
+                                      "Very little" = 2, "Somewhat" = 3,
+                                      "Quite a lot" = 4)) %>%
+  mutate(worry_fam_prob = recode(worry_fam_prob, "Not at all" = 1,
+                                      "Very little" = 2, "Somewhat" = 3,
+                                      "Quite a lot" = 4)) %>%
+  mutate(rw_intercaste_marriage = recode(rw_intercaste_marriage, "Right" = 1,
+                                         "Somewhat right" = 2,
+                                         "Can't say" = 3,
+                                         "Wrong" = 4)) %>%
+  mutate(rw_interrel_marriage = recode(rw_interrel_marriage, "Right" = 1,
+                                         "Somewhat right" = 2,
+                                         "Can't say" = 3,
+                                         "Wrong" = 4)) %>%
+  mutate(rw_livein = recode(rw_livein, "Right" = 1,
+                                         "Somewhat right" = 2,
+                                         "Can't say" = 3,
+                                         "Wrong" = 4)) %>%
+  mutate(rw_dating = recode(rw_dating, "Right" = 1,
+                                         "Somewhat right" = 2,
+                                         "Can't say" = 3,
+                                         "Wrong" = 4))
+
+sem_rightwrong_data <- sem_rightwrong_data %>%
+  mutate(worry_fam_tradition = as.ordered(worry_fam_tradition)) %>%
+  mutate(worry_fam_prob = as.ordered(worry_fam_prob)) %>%
+  mutate(rw_intercaste_marriage = as.ordered(rw_intercaste_marriage)) %>%
+  mutate(rw_interrel_marriage = as.ordered(rw_interrel_marriage)) %>%
+  mutate(rw_livein = as.ordered(rw_livein)) %>%
+  mutate(rw_dating = as.ordered(rw_dating))
+# 
+# dictionary_rightwrong <- labelled::generate_dictionary(sem_rightwrong_data)
+# dictionary_rightwrong
+# 
+# md.pattern(sem_rightwrong_data)
+# 
+# saveRDS(sem_rightwrong_data, file="rightwrong.Rda")
+
+# rightwrong <- readRDS(file="rightwrong.Rda")
+# md.pattern(rightwrong)
+
+dictionary_friends <- labelled::generate_dictionary(sem_rightwrong_data)
+dictionary_friends
+
+# check for normality
+
+#mvnout <- mardia(sem_rightwrong_data[1:5000,])
+#mvnout$uv.shapiro
+
+#shapiro_maryada <- mvnout$mv.test
+
+
+measurement_rightwrong <- '
+  # measurement portion of model
+  non.diverse.friend =~ friend_religion + friend_caste + friend_gender
+  '
+
+measurement.model.fit1 <- cfa(measurement_rightwrong, data = rightwrong)
+summary(measurement.model.fit1, fit.measures=TRUE, standardized=TRUE)
+
+
+# save standardised factor loadings in object s1
+sl <- standardizedSolution(measurement.model.fit1)
+
+# extract from s1 standardised estimates (est.std) form only parent conditional regard
+sl <- sl$est.std[sl$lhs == "non.diverse.friend"]
+
+# calculate the residual variances
+re <- 1 - sl^2
+
+# calculate the composite reliability
+sum(sl)^2 / (sum(sl)^2 + sum(re))
+
+# Composite reliability - right.wrong.romance - 0.91
+# Composite reliability - fam.worry -.77
+# Composite reliability - non.diverse.friend -.84
+
+
+
+
+rightwrong_test <- '
+  # measurement portion of model
+  non.diverse.friend =~ friend_religion + friend_caste + friend_gender
+  fam.worry =~ worry_fam_tradition + worry_fam_prob
+  right.wrong.romance =~ rw_intercaste_marriage + rw_interrel_marriage + rw_livein + rw_dating
+  # structural portion of model
+  non.diverse.friend ~ a*gender
+  non.diverse.friend ~ b*town
+  non.diverse.friend ~ c*city
+  non.diverse.friend ~ d*metro
+  non.diverse.friend ~ e*married
+  non.diverse.friend ~ f*matric_edu
+  non.diverse.friend ~ g*primary_middle_edu
+  non.diverse.friend ~ h*high_school_edu
+  non.diverse.friend ~ i*grad_edu
+  non.diverse.friend ~ j*post_grad_edu
+  non.diverse.friend ~ k*obc
+  non.diverse.friend ~ l*open_cat_caste
+  non.diverse.friend ~ a2*medium_fam_size
+  non.diverse.friend ~ a3*large_fam_size
+  fam.worry ~ m*gender
+  fam.worry ~ n*town
+  fam.worry ~ o*city
+  fam.worry ~ p*metro
+  fam.worry ~ q*married
+  fam.worry ~ r*matric_edu
+  fam.worry ~ s*primary_middle_edu
+  fam.worry ~ t*high_school_edu
+  fam.worry ~ u*grad_edu
+  fam.worry ~ v*post_grad_edu
+  fam.worry ~ w*obc
+  fam.worry ~ x*open_cat_caste
+  fam.worry ~ b2*medium_fam_size
+  fam.worry ~ b3*large_fam_size
+  right.wrong.romance ~ non.diverse.friend + fam.worry + gender + town + city + metro + medium_fam_size + large_fam_size + married + matric_edu + primary_middle_edu + high_school_edu + grad_edu + post_grad_edu + obc + open_cat_caste
+  '
+fit.mod.rightwrong <- sem(rightwrong_test, data = sem_rightwrong_data)
+
+summary(fit.mod.rightwrong, fit.measures=TRUE, standardized=TRUE)
+
+fitMeasures(fit.mod.rightwrong, c("rmsea.scaled", "rmsea.ci.lower.scaled", "rmsea.ci.upper.scaled", "rmsea.pvalue.scaled", "cfi.scaled", "srmr"))
+
+# parameterestimates(fit.mod.neighbour, boot.ci.type = "perc", standardized = TRUE)
+
+# segregating data needed for the regressions
+
+rightwrong_lv_fit <- standardizedsolution (fit.mod.rightwrong, type = "std.all", se = TRUE, zstat = TRUE, pvalue = TRUE, ci = TRUE) %>%
+  filter (op == "=~") %>%
+  dplyr::select (LV=lhs, Item=rhs, Coefficient=est.std, ci.lower, ci.upper, SE=se, Z=z, 'p-value'=pvalue)
+# 
+# saveRDS(rightwrong_lv_fit, file="m2f.Rda")
+
+# m2f <- readRDS(file="m2f.Rda")
+
+rightwrong_direct_effects_reg <- standardizedsolution(fit.mod.rightwrong, type = "std.all", se = TRUE, zstat = TRUE, pvalue = TRUE, ci = TRUE)%>%
+  filter(op == "~") %>%
+  dplyr::select(LV=lhs, Item=rhs, Coefficient=est.std, ci.lower, ci.upper, SE=se, Z=z, 'p-value'=pvalue)
+# 
+# saveRDS(rightwrong_direct_effects_reg, file="m2r.Rda")
+
+# m2r <- readRDS(file="m2r.Rda")
+
+```
+
+Model specification:
+
+This model outlines the relationship between select exogenous indicators (gender, marital status, type of area where one lives in, family size, education and caste) and the opinions on moral or immoral nature of male-female romantic relationships. Additionally, it considers whether these relationships are mediated by the extent to which individuals worry about their family (using the latent variable fam.worry discussed previously) and if they are mediated by how diverse ones friend group is.
+
+In addition to the fam.worry latent variable that has already been discussed above, this model sees the introduction of yet another mediating latent variable. A latent measure of how diverse one's friend group is is constructed using three indicators:
+1) friend_religion 
+2) friend_caste 
+3) friend_gender
+All these variables where dummy variables where a value of 1 indicates not having a friend from either a different religion, caste or gender (depending on the question asked). The rationale for including this latent variable is due to its relavance to the outcome measured by this model. Outside of our family, our friend groups and the diversity within such groups is likely to shape views towards romantic relationships. 
+
+Next, seeing as the outcome variable has to do with romantic relationships between men and women, four indicators were selected for this model:
+1) rw_intercaste_marriage - specify
+2) rw_interrel_marriage - specify
+3) rw_livein - specify
+4) rw_dating - specify
+All these items were measured on a Likert scale with higher values indicating that the type of relationship is more wrong, therefore indicating more 'traditionalism'. These individual indicators seem to be tapping into something unobservable about what is considered moral or immoral when it comes to romantic relationships between men and women, so they were used to construct a latent (outcome) variable called right.wrong.romance.  
+
+It was hypothesised that being a man, being married, lower levels of education, larger family size and living in rural areas would be positively associated with worry about family, with a non-diverse friend group and with classifying romantic relationships as immoral/wrong.Additionally, greater worry about family and non-diverse friend group would be positively associated with classifying romantic relationships as immoral/wrong.
+
+While not centric to my interests, it was also hypothesised that the positive association between the exogenous variables and the outcome variable would be partially (positively) mediated by worry about family and having a non-diverse friend group. 
+
+First, I examine the measurement model and then delve into the structural model:
+
+```{r fig_n3, fig.cap="RightWrong", fig.align='center'}
+
+knitr::include_graphics('RightWrong.png')
+
+# lavaanPlot(name = "RightWrong", model = fit.mod.rightwrong, node_options = list(shape = "box", fontname = "Helvetica"), 
+           # edge_options = list(color = "red"), coefs = TRUE, stand = TRUE, sig = .05, stars = "regress", digits = 2)
+
+```
+
+
+```{r}
+
+stargazer(rightwrong_lv_fit, summary=FALSE, type='text', rownames=FALSE, initial.zero=FALSE, digits=3, title='Factor loadings RightWrong')
+
+```
+
+The measurement model:
+
+The measurement model consists of 3 latent variables, non.diverse.friend, fam.worry and right.wrong.romance. This output presents standardized coefficients (factor loadings) for items on latent variables (LV), confidence intervals (ci.lower, ci.upper), standard errors (SE), Z values (Wald test), and p-values testing the null hypothesis that a coefficient = 0. As we can see from the table above, all standardised factor loadings (coefficients) for the measured variables on their latent factors are significant. The size of the coefficients (β range of 0.45 - 0.80 for non.diverse.friend and β of 0.84 and 0.91 for fam.worry and a β of 0.78 to 0.95 for right.wrong.romance) indicates that the magnitude of the relationships between items and factors are adequate. While there is no strict cutoff for the factor loading size, one rule of thumb is that factor loadings < .40 are weak and factor loadings > .60 are strong (Garson, 2010) (from curran). Furthermore, each of these latent factors demonstrated acceptable composite reliability (fam.worry = 0.77; right.wrong.romance = 0.90, non.diverse.friend = 0.84).
+
+
+```{r}
+
+tab <- stargazer(rightwrong_direct_effects_reg, summary=FALSE, type='text', rownames=FALSE, initial.zero=FALSE, digits=3, title='SEM Regression Right Wrong')
+
+```
+
+The structural model:
+
+In this structural equation model, three latent variables are studied: non.diverse.friend, fam.worry, and right.wrong.romance. The coefficients represent the standardized beta coefficients, which measure the strength of association between predictor and outcome variables.
+
+For non.diverse.friend:
+gender shows a medium effect size (0.151) with a positive direction and do does being married (0.116), indicating that being female or being married is moderately associated with having non-diverse friends, and this is significant (p-value close to 0). Having a large family as compared to a small family is weakly associated with not having a diverse friend group (0.052). The variables town, city, metro all have negative coefficients that are highly significant and so do all the education variables (p-value close to 0). This suggests that living in towns or cities compared to a village, and having higher levels of education as compared to being someone below primary or without an education, are associated with having a more diverse set of friends. The coefficients for both the obc and open category caste groups is not significant indicating that there is no evidence for an association between caste and diversity of friend group.
+
+For fam.worry:
+Overall, the practical significance of most of the variables is low and follows similar patters as the relationship seen in the previous SEM model. married and gender show a positive relationship with family worry, with coefficients of 0.102 and 0.042 respectively, indicating small to medium effect sizes. Both are significant (p-value close to 0). This is also the case with people who are a part of medium-sized and large-sized families (as compared to small families) where the coefficients are weak yet positive and significant (0.06 and 0.05 respectively). The coefficients for town and metro show a negative relationship, implying that living in these areas is associated with less family worry as compared to living in villages. These relationships are significant (p-value close to 0).
+
+For right.wrong.romance:
+non.diverse.friend and fam.worry have positive coefficients (0.163 and 0.038 respectively), suggesting that having non-diverse friends and greater worry for family are positively associated with more traditional views on romantic relationships. These coefficients are statistically significant. Being married is also positively associated with more traditional or rigid views on romantic relationships and there is weak evidence that belonging to the obc and open caste categories is also positively associated with these traditional views (with coefficients of 0.07 and 0.04 respectively). Living in more developed areas (town, city or metro) as compared to villages is negatively associated with traditional views on romance as so is being more educated. Coefficients for all the levels of education (barring primary_middle_edu) and negative and significant. When it comes to gender, there is no evidence that men are more likely to espouse traditional views on romance as compared to women, as the coefficient is not statistically significant.
+
+Overall, the introduction of the non.diverse.friend latent variable adds an additional layer of complexity and nuance to the formation of norms. In the earlier model (and in the current one), we see that larger family sizes is positively associated with more traditional views. Now, we also see that having a diverse set of friends along lines of caste, gender and religion is negatively associated with traditional views. Who you are surrounded by plays a role in how norms are shaped and we see evidence for the influence of family and friend groups and the pull in opposite directions.
+
+All indices of model fit are within standard/acceptable ranges. (fill in from final table).
+
+Discussion of the results:
+
+
+```{r}
+
+stargazer(rightwrong_indirect_effects_reg, summary=FALSE, type='text', rownames=FALSE, initial.zero=FALSE, digits=3, title='SEM Regression Right Wrong - Indirect')
+
+```
+
+
+
+```{r}
+
+stargazer(rsq_rightwrong, summary=FALSE, type='text', rownames=FALSE, initial.zero=FALSE, digits=3, title='R-Squared Right Wrong')
+
+```
+
+
+
+MODEL ON WHO YOU PICK AS YOUR NEIGHBOUR (neighbours from with anti-hindu preferences)
+
+```{r}
+
+sem_neighbour_data <- cleandat %>%
+  dplyr::select(gender, type_of_area, edu, married, caste, veg,
+                total_house_members_cat,
+                worry_fam_tradition, worry_fam_prob,
+                neighbour_discomfort_meat, neighbour_discomfort_caste,
+                neighbour_discomfort_alcohol, neighbour_discomfort_religion,
+                neighbour_discomfort_livein) %>%
+  na.omit()
+
+
+town <- ifelse(sem_neighbour_data$type_of_area == 'Town', 1, 0)
+city <- ifelse(sem_neighbour_data$type_of_area == 'City', 1, 0)
+metro <- ifelse(sem_neighbour_data$type_of_area == 'Metropolis', 1, 0)
+medium_fam_size <- ifelse(sem_neighbour_data$total_house_members_cat == 'Medium', 1, 0)
+large_fam_size <- ifelse(sem_neighbour_data$total_house_members_cat == 'Large', 1, 0)
+pure_veg <- ifelse(sem_neighbour_data$veg == 'Pure vegetarian', 1, 0)
+veg_with_eggs <- ifelse(sem_neighbour_data$veg == 'Eggetarian', 1, 0)
+obc <- ifelse(sem_neighbour_data$caste == 'Other Backward Classes (OBC)', 1, 0)
+open_cat_caste <- ifelse(sem_neighbour_data$caste == 'Others', 1, 0)
+primary_middle_edu <- ifelse(sem_neighbour_data$edu == 'Primary pass or Middle pass', 1, 0)
+matric_edu <- ifelse(sem_neighbour_data$edu == 'Matric pass', 1, 0)
+high_school_edu <- ifelse(sem_neighbour_data$edu == 'Intermediate/College no degree', 1, 0)
+grad_edu <- ifelse(sem_neighbour_data$edu == 'Graduate or equivalent', 1, 0)
+post_grad_edu <- ifelse(sem_neighbour_data$edu == 'Post Graduate or Professional Degree', 1, 0)
+
+sem_neighbour_data <- data.frame(gender = sem_neighbour_data$gender,
+                                 married = sem_neighbour_data$married,
+                                 worry_fam_tradition = sem_neighbour_data$worry_fam_tradition,
+                                 worry_fam_prob = sem_neighbour_data$worry_fam_prob,
+                                 neighbour_discomfort_meat = sem_neighbour_data$neighbour_discomfort_meat,
+                                 neighbour_discomfort_caste = sem_neighbour_data$neighbour_discomfort_caste,
+                                 neighbour_discomfort_alcohol = sem_neighbour_data$neighbour_discomfort_alcohol,
+                                 neighbour_discomfort_religion = sem_neighbour_data$neighbour_discomfort_religion,
+                                 neighbour_discomfort_livein = sem_neighbour_data$neighbour_discomfort_livein,
+                                 town = town,
+                                 city = city,
+                                 metro = metro,
+                                 medium_fam_size = medium_fam_size,
+                                 large_fam_size = large_fam_size,
+                                 pure_veg = pure_veg,
+                                 veg_with_eggs = veg_with_eggs,
+                                 obc = obc,
+                                 open_cat_caste = open_cat_caste,
+                                 primary_middle_edu = primary_middle_edu,
+                                 matric_edu = matric_edu,
+                                 high_school_edu = high_school_edu,
+                                 grad_edu = grad_edu,
+                                 post_grad_edu = post_grad_edu)
+
+
+
+sem_neighbour_data <- sem_neighbour_data %>%
+  mutate(gender = recode(gender, "Male" = 0, "Female" = 1)) %>%
+  mutate(married = recode(married, "Married" = 1, "Not married" = 0)) %>%
+  mutate(neighbour_discomfort_meat = recode(neighbour_discomfort_meat, "No" = 1 , "Maybe" = 2, "Yes" = 3)) %>%
+  mutate(neighbour_discomfort_caste = recode(neighbour_discomfort_caste, "No" = 1 , "Maybe" = 2, "Yes" = 3)) %>%
+  mutate(neighbour_discomfort_alcohol = recode(neighbour_discomfort_alcohol, "No" = 1 , "Maybe" = 2, "Yes" = 3)) %>%
+  mutate(neighbour_discomfort_religion = recode(neighbour_discomfort_religion, "No" = 1 , "Maybe" = 2, "Yes" = 3)) %>%
+  mutate(neighbour_discomfort_livein = recode(neighbour_discomfort_livein, "No" = 1 , "Maybe" = 2, "Yes" = 3)) %>%
+  mutate(worry_fam_tradition = recode(worry_fam_tradition, "Not at all" = 1,
+                                      "Very little" = 2, "Somewhat" = 3,
+                                      "Quite a lot" = 4)) %>%
+  mutate(worry_fam_prob = recode(worry_fam_prob, "Not at all" = 1,
+                                      "Very little" = 2, "Somewhat" = 3,
+                                      "Quite a lot" = 4))
+
+
+sem_neighbour_data <- sem_neighbour_data %>%
+  mutate(worry_fam_tradition = as.ordered(worry_fam_tradition)) %>%
+  mutate(worry_fam_prob = as.ordered(worry_fam_prob)) %>%
+  mutate(neighbour_discomfort_meat = as.ordered(neighbour_discomfort_meat)) %>%
+  mutate(neighbour_discomfort_caste = as.ordered(neighbour_discomfort_caste)) %>%
+  mutate(neighbour_discomfort_alcohol = as.ordered(neighbour_discomfort_alcohol)) %>%
+  mutate(neighbour_discomfort_religion = as.ordered(neighbour_discomfort_religion)) %>%
+  mutate(neighbour_discomfort_livein = as.ordered(neighbour_discomfort_livein))
+
+
+md.pattern(sem_neighbour_data)
+
+
+neighbour_test <- '
+  # measurement portion of model
+  fam.worry =~ worry_fam_tradition + worry_fam_prob
+  neighbour.discomfort =~ neighbour_discomfort_caste + neighbour_discomfort_religion + neighbour_discomfort_meat + neighbour_discomfort_alcohol +
+  neighbour_discomfort_livein
+  # structural portion of model
+  fam.worry ~ gender + married + town + city + metro + medium_fam_size + large_fam_size + pure_veg + veg_with_eggs +
+  matric_edu + primary_middle_edu + high_school_edu + grad_edu + post_grad_edu + obc + open_cat_caste
+  neighbour.discomfort ~ fam.worry + gender + married + town + city + metro + medium_fam_size +
+  large_fam_size + matric_edu + primary_middle_edu + high_school_edu + grad_edu + post_grad_edu + obc + open_cat_caste + 
+  pure_veg + veg_with_eggs
+  '
+
+fit.mod.neighbour <- sem(neighbour_test, data = sem_neighbour_data)
+
+summary(fit.mod.neighbour, fit.measures=TRUE, standardized=TRUE)
+
+neighbour_lv_fit <- standardizedsolution (fit.mod.neighbour, type = "std.all", se = TRUE, zstat = TRUE, pvalue = TRUE, ci = TRUE) %>%
+  filter (op == "=~") %>%
+   dplyr::select (LV=lhs, Item=rhs, Coefficient=est.std, ci.lower, ci.upper, SE=se, Z=z, 'p-value'=pvalue)
+
+
+neighbour_direct_effects_reg <- standardizedsolution(fit.mod.neighbour, type = "std.all", se = TRUE, zstat = TRUE, pvalue = TRUE, ci = TRUE) %>%
+   filter(op == "~") %>%
+   dplyr::select(Outcome=lhs, Item=rhs, Coefficient=est.std, ci.lower, ci.upper, SE=se, Z=z, 'p-value'=pvalue) %>%
+   mutate(across(where(is.numeric), round, 3)) %>%
+   mutate(Significance = ifelse(`p-value` < 0.05, 'True', 'False')) %>%
+   mutate(`p-value` = ifelse(`p-value` < 0.05, paste0(`p-value`, "*"), `p-value`))
+
+
+```
+
+
+
+
+```{r include=FALSE}
+
+sem_neighbour_data <- cleandat %>%
+  dplyr::select(gender, type_of_area, edu, married, caste, veg, pride_caste, pride_religion,
+                total_house_members_cat,
+                worry_fam_tradition, worry_fam_prob,
+                neighbour_discomfort_meat, neighbour_discomfort_caste,
+                neighbour_discomfort_alcohol, neighbour_discomfort_religion,
+                neighbour_discomfort_livein) %>%
+  na.omit()
+# 
+# 
+town <- ifelse(sem_neighbour_data$type_of_area == 'Town', 1, 0)
+city <- ifelse(sem_neighbour_data$type_of_area == 'City', 1, 0)
+metro <- ifelse(sem_neighbour_data$type_of_area == 'Metropolis', 1, 0)
+medium_fam_size <- ifelse(sem_neighbour_data$total_house_members_cat == 'Medium', 1, 0)
+large_fam_size <- ifelse(sem_neighbour_data$total_house_members_cat == 'Large', 1, 0)
+pure_veg <- ifelse(sem_neighbour_data$veg == 'Pure vegetarian', 1, 0)
+veg_with_eggs <- ifelse(sem_neighbour_data$veg == 'Eggetarian', 1, 0)
+obc <- ifelse(sem_neighbour_data$caste == 'Other Backward Classes (OBC)', 1, 0)
+open_cat_caste <- ifelse(sem_neighbour_data$caste == 'Others', 1, 0)
+primary_middle_edu <- ifelse(sem_neighbour_data$edu == 'Primary pass or Middle pass', 1, 0)
+matric_edu <- ifelse(sem_neighbour_data$edu == 'Matric pass', 1, 0)
+high_school_edu <- ifelse(sem_neighbour_data$edu == 'Intermediate/College no degree', 1, 0)
+grad_edu <- ifelse(sem_neighbour_data$edu == 'Graduate or equivalent', 1, 0)
+post_grad_edu <- ifelse(sem_neighbour_data$edu == 'Post Graduate or Professional Degree', 1, 0)
+
+sem_neighbour_data <- data.frame(gender = sem_neighbour_data$gender,
+                                 married = sem_neighbour_data$married,
+                                 worry_fam_tradition = sem_neighbour_data$worry_fam_tradition,
+                                 worry_fam_prob = sem_neighbour_data$worry_fam_prob,
+                                 pride_caste = sem_neighbour_data$pride_caste,
+                                 pride_religion = sem_neighbour_data$pride_religion,
+                                 neighbour_discomfort_meat = sem_neighbour_data$neighbour_discomfort_meat,
+                                 neighbour_discomfort_caste = sem_neighbour_data$neighbour_discomfort_caste,
+                                 neighbour_discomfort_alcohol = sem_neighbour_data$neighbour_discomfort_alcohol,
+                                 neighbour_discomfort_religion = sem_neighbour_data$neighbour_discomfort_religion,
+                                 neighbour_discomfort_livein = sem_neighbour_data$neighbour_discomfort_livein,
+                                 town = town,
+                                 city = city,
+                                 metro = metro,
+                                 medium_fam_size = medium_fam_size,
+                                 large_fam_size = large_fam_size,
+                                 pure_veg = pure_veg,
+                                 veg_with_eggs = veg_with_eggs,
+                                 obc = obc,
+                                 open_cat_caste = open_cat_caste,
+                                 primary_middle_edu = primary_middle_edu,
+                                 matric_edu = matric_edu,
+                                 high_school_edu = high_school_edu,
+                                 grad_edu = grad_edu,
+                                 post_grad_edu = post_grad_edu)
+
+
+
+sem_neighbour_data <- sem_neighbour_data %>%
+  mutate(gender = recode(gender, "Male" = 0, "Female" = 1)) %>%
+  mutate(married = recode(married, "Married" = 1, "Not married" = 0)) %>%
+  mutate(pride_caste = recode(pride_caste, "Rank 4" = 1 , "Rank 3" = 2, "Rank 2" = 3, "Rank 1" = 4)) %>%
+  mutate(pride_religion = recode(pride_religion, "Rank 4" = 1 , "Rank 3" = 2, "Rank 2" = 3, "Rank 1" = 4)) %>%
+  mutate(neighbour_discomfort_meat = recode(neighbour_discomfort_meat, "No" = 1 , "Maybe" = 2, "Yes" = 3)) %>%
+  mutate(neighbour_discomfort_caste = recode(neighbour_discomfort_caste, "No" = 1 , "Maybe" = 2, "Yes" = 3)) %>%
+  mutate(neighbour_discomfort_alcohol = recode(neighbour_discomfort_alcohol, "No" = 1 , "Maybe" = 2, "Yes" = 3)) %>%
+  mutate(neighbour_discomfort_religion = recode(neighbour_discomfort_religion, "No" = 1 , "Maybe" = 2, "Yes" = 3)) %>%
+  mutate(neighbour_discomfort_livein = recode(neighbour_discomfort_livein, "No" = 1 , "Maybe" = 2, "Yes" = 3)) %>%
+  mutate(worry_fam_tradition = recode(worry_fam_tradition, "Not at all" = 1,
+                                      "Very little" = 2, "Somewhat" = 3,
+                                      "Quite a lot" = 4)) %>%
+  mutate(worry_fam_prob = recode(worry_fam_prob, "Not at all" = 1,
+                                      "Very little" = 2, "Somewhat" = 3,
+                                      "Quite a lot" = 4))
+
+
+sem_neighbour_data <- sem_neighbour_data %>%
+  mutate(worry_fam_tradition = as.ordered(worry_fam_tradition)) %>%
+  mutate(worry_fam_prob = as.ordered(worry_fam_prob)) %>%
+  mutate(pride_caste = as.ordered(pride_caste)) %>%
+  mutate(pride_religion = as.ordered(pride_religion)) %>%
+  mutate(neighbour_discomfort_meat = as.ordered(neighbour_discomfort_meat)) %>%
+  mutate(neighbour_discomfort_caste = as.ordered(neighbour_discomfort_caste)) %>%
+  mutate(neighbour_discomfort_alcohol = as.ordered(neighbour_discomfort_alcohol)) %>%
+  mutate(neighbour_discomfort_religion = as.ordered(neighbour_discomfort_religion)) %>%
+  mutate(neighbour_discomfort_livein = as.ordered(neighbour_discomfort_livein))
+# 
+# 
+# md.pattern(sem_neighbour_data)
+# 
+# saveRDS(sem_neighbour_data, file="neighbour.Rda")
+
+# neighbour <- readRDS(file="neighbour.Rda")
+
+
+
+dictionary_neighbour <- labelled::generate_dictionary(sem_neighbour_data)
+dictionary_neighbour
+
+# check for normality
+
+#mvnout <- mardia(sem_neighbour_data[1:5000,])
+#mvnout$uv.shapiro
+
+#shapiro_neighbour <- mvnout$mv.test
+
+neighbour_test <- '
+  # measurement portion of model
+  fam.worry =~ worry_fam_tradition + worry_fam_prob
+  neighbour.discomfort =~ neighbour_discomfort_caste + neighbour_discomfort_religion + neighbour_discomfort_meat + neighbour_discomfort_alcohol +
+  neighbour_discomfort_livein
+  # structural portion of model
+  fam.worry ~ gender + married + town + city + metro + medium_fam_size + large_fam_size + pure_veg + veg_with_eggs +
+  matric_edu + primary_middle_edu + high_school_edu + grad_edu + post_grad_edu + obc + open_cat_caste
+  pride_caste ~ fam.worry + gender + married + town + city + metro + medium_fam_size + large_fam_size + + pure_veg + veg_with_eggs +
+  matric_edu + primary_middle_edu + high_school_edu + grad_edu + post_grad_edu + obc + open_cat_caste
+  pride_religion ~ fam.worry + gender + married + town + city + metro + medium_fam_size + large_fam_size + + pure_veg + veg_with_eggs +
+  matric_edu + primary_middle_edu + high_school_edu + grad_edu + post_grad_edu + obc + open_cat_caste
+  neighbour.discomfort ~ fam.worry + pride_caste + pride_religion + gender + married + town + city + metro + medium_fam_size +
+  large_fam_size + matric_edu + primary_middle_edu + high_school_edu + grad_edu + post_grad_edu + obc + open_cat_caste + 
+  pure_veg + veg_with_eggs
+  '
+
+fit.mod.neighbour <- sem(neighbour_test, data = sem_neighbour_data)
+
+summary(fit.mod.neighbour, fit.measures=TRUE, standardized=TRUE)
+
+fitMeasures(fit.mod.neighbour, c("rmsea.scaled", "rmsea.ci.lower.scaled", "rmsea.ci.upper.scaled", "rmsea.pvalue.scaled", "cfi.scaled", "srmr"))
+
+# parameterestimates(fit.mod.neighbour, boot.ci.type = "perc", standardized = TRUE)
+
+# segregating data needed for the regressions
+
+neighbour_lv_fit <- standardizedsolution (fit.mod.neighbour, type = "std.all", se = TRUE, zstat = TRUE, pvalue = TRUE, ci = TRUE) %>%
+  filter (op == "=~") %>%
+  dplyr::select (LV=lhs, Item=rhs, Coefficient=est.std, ci.lower, ci.upper, SE=se, Z=z, 'p-value'=pvalue)
+# 
+# saveRDS(neighbour_lv_fit, file="m3f.Rda")
+
+# m3f <- readRDS(file="m3f.Rda")
+
+neighbour_direct_effects_reg <- standardizedsolution(fit.mod.neighbour, type = "std.all", se = TRUE, zstat = TRUE, pvalue = TRUE, ci = TRUE) %>%
+  filter(op == "~") %>%
+  dplyr::select(Outcome=lhs, Item=rhs, Coefficient=est.std, ci.lower, ci.upper, SE=se, Z=z, 'p-value'=pvalue) %>%
+  mutate(across(where(is.numeric), round, 3)) %>%
+  mutate(Significance = ifelse(`p-value` < 0.05, 'True', 'False')) %>%
+  mutate(`p-value` = ifelse(`p-value` < 0.05, paste0(`p-value`, "*"), `p-value`))
+# 
+# saveRDS(neighbour_direct_effects_reg, file="m3r.Rda")
+
+# m3r <- readRDS(file="m3r.Rda")
+
+
+# neighbour_indirect_effects_reg <- standardizedsolution(fit.mod.neighbour, type = "std.all", se = TRUE, zstat = TRUE, pvalue = TRUE, ci = TRUE)%>% 
+#   filter(op == ":=") %>% 
+#   dplyr::select(LV=lhs, Item=rhs, Coefficient=est.std, ci.lower, ci.upper, SE=se, Z=z, 'p-value'=pvalue)
+# 
+# rsq_neighbour <- parameterEstimates(fit.mod.neighbour, standardized=TRUE, rsquare = TRUE) %>% 
+#   filter(op == "r2") %>% 
+#   dplyr::select(Item=rhs, R2 = est) 
+
+stargazer(neighbour_lv_fit, summary=FALSE, type='text', rownames=FALSE, initial.zero=FALSE, digits=3, title='Factor loadings Neighbour')
+
+stargazer(neighbour_direct_effects_reg, summary=FALSE, type='text', rownames=FALSE, initial.zero=FALSE, digits=3, title='SEM Regression Neighbour')
+
+
+
+```
+
+Model specification:
+
+This model aims to understand what shapes choices and opinions around neighbour preferences. As discussed in the review of the literature, preference for neighbours of a similar caste and religion has led to marginalised groups being unable to find housing even in big metropolitan cities in India. Therefore, even seemingly harmless preferences around who one would like as a neighbour can have serious consequences.
+
+At its core, this model outlines the relationship between select exogenous indicators (gender, marital status, type of area where one lives in, dietary preferences, family size, education and caste), concern for family, the pride felt towards ones caste and religion and whether having certain types of neighbours would cause discomfort. 
+
+Like this previous models, this model too adopts a similar approach and connects exogenous indicators to the family concern mediator to the outcome variable. However, I aim to add more complexity to this model by adding a few more mediator variables namely pride felt towards ones caste and religion where higher values (ranging from 1-4) indicate a higher rank given by the participant. 
+
+The outcome of interest is to capture a measure of a type of neighbour that is to be avoided and 5 indicators from this dataset adequately capture such preferences for neighbours along caste and religious lines. Constructing a latent measure of neighbour discomfort using these 5 indicators allows me to tap into an unobserved measure of discomfort towards having neighbours from a different caste or religion and ones that do not abide by traditional Hindu, upper caste norms:
+1) neighbour_discomfort_caste
+2) neighbour_discomfort_religion
+3) neighbour_discomfort_meat
+4) neighbour_discomfort_alcohol
+5) neighbour_discomfort_livein
+Responses are coded in a manner where higher values indicate greater discomfort, indicating a greater tilt towards a traditional mindset.
+
+It was hypothesised that being a man, being married, lower levels of education, being a pure vegetarian, having a larger family size and living in rural areas would be positively associated with worry about family, pride felt towards ones caste and religion and with greater discomfort towards having neighbours from a different caste or religion and ones that do not abide by traditional Hindu, upper caste norms. 
+
+Greater worry about family would be positively associated with pride felt towards ones caste and religion. And worry about family and pride felt towards ones caste and religion would be positively associated with greater discomfort towards having neighbours from a different caste or religion and ones that do not abide by traditional Hindu, upper caste norms.
+
+Literature on identity performance discusses the motivation to consolidate one's identity by enacting in-group norms. Here, I argue that greater pride in these identity categories leads to a need to act and behave in a manner that is congruent with in-group norms. 
+
+First, I examine the measurement model and then delve into the structural model:
+
+
+```{r fig_n4, fig.cap="Neighbour", fig.align='center'}
+
+knitr::include_graphics('Neighbour.png')
+
+# lavaanPlot(name = "Neighbour", model = fit.mod.neighbour, node_options = list(shape = "box", fontname = "Helvetica"), 
+           # edge_options = list(color = "cyan"), coefs = TRUE, stand = TRUE, sig = .05, stars = "regress", digits = 2)
+
+```
+
+
+```{r}
+
+
+
+stargazer(neighbour_lv_fit, summary=FALSE, type='text', rownames=FALSE, initial.zero=FALSE, digits=3, title='Factor loadings Neighbour')
+
+```
+Measurement model:
+
+The measurement model consists of 2 latent variables, fam.worry and neighbour.discomfort. As we can see from the table above, all standardised factor loadings (coefficients) for the measured variables on their latent factors are significant. The size of the coefficients (β range of 0.85 - 0.90 for  fam.worry and a β of 0.52 to 0.89 for neighbour.discomfort) indicates that the magnitude of the relationships between items and factors are adequate. Furthermore, each of these latent factors demonstrated acceptable composite reliability (fam.worry = 0.77; right.wrong.romance = 0.90, non.diverse.friend = 0.84) - VERIFY
+
+```{r}
+
+stargazer(neighbour_direct_effects_reg, summary=FALSE, type='text', rownames=FALSE, initial.zero=FALSE, digits=3, title='SEM Regression Neighbour')
+
+datatable(neighbour_direct_effects_reg, options = list(pageLength = 10, autoWidth = TRUE), rownames = FALSE) %>% 
+  formatStyle(names(neighbour_direct_effects_reg),
+              backgroundColor = styleEqual(c("True", "False"), c("green", "red")))
+
+```
+
+Structural model:
+
+Overarchingly, the results align with the predictions. 
+
+Like in the previous models, fam.worry is positively associated with being a woman (.045), being married (.084), medium (0.06) and large (0.05) family sizes as compared to smaller families and being a pure vegetarian or an eggetarian as compared to being a non-vegetarian. On the contrary, it is negatively associated with residing in a town (coefficient = -.078, p = .00004) and a metro (coefficient = -.098, p = .000), indicating that living in these areas tends to decrease family worry. In this model, we do not find evidence for an association between fam.worry and education or fam.worry and caste.
+
+Turning to pride in one's caste and religion, I find that a greater concern for family is associated with a greater pride in one's caste and one's religion. Being married is positively associated with pride in one's caste but not religion. Caste pride is negatively associated with being a city dweller in comparison to being a village dweller and there is no evidence of a significant association when it comes to pride in one's religion. Being a part of medium and large-sized families is positively associated with pride in one's religion but there is no evidence for the same when it comes to caste pride. Being a pure vegetarian is positively associated with both pride in one's caste and religion, but being an eggetarian is only positively associated with caste pride. Higher levels of education are negatively associated with pride in one's caste and religion as compared to the reference category of very little to no education. With caste, there is again little evidence of any association. The only weak positive association is between the obc caste category and pride in one's religion. 
+
+With neighbour.discomfort, I find that there is a positive association between fam.worry and neighbour.discomfort, indicating that greater concern for family is associated with more traditional preferences with regards to who one is 'comfortable' having as their neighbour. This is also the case for pride in one's caste where a greater degree of pride in one's caste is positively associated with greater discomfort with having neighbours who do not espouse traditional upper caste, Hindu values. Being a woman, hailing from a large family as compared to a small family is also positively associated with greater discomfort with untraditional neighbours. Being a pure vegetarian is positively associated with discomfort with non-traditional neighbours as compared to being a non-vegetarian. This positive association holds (albeit a weaker association) with eggetarians and neighbour discomfort too, when compared to non-vegetarians. There is also a weak positive association between being in the open caste category and neighbour.discomfort (as compared to the SC/ST caste categories). When looking at negative associations, I find that town, city and metro dwellers are less likely to feel uncomfortable with non-traditional neighbours as compared to village dwellers. There is no evidence for an association between education and discomfort with non-traditional neighbours.
+
+All indices of model fit are within standard/acceptable ranges. (fill in from final table).
+
+Discussion of the results:
+
+```{r}
+
+stargazer(neighbour_indirect_effects_reg, summary=FALSE, type='text', rownames=FALSE, initial.zero=FALSE, digits=3, title='SEM Regression Neighbour - Indirect')
+
+```
+
+
+
+```{r}
+
+stargazer(rsq_neighbour, summary=FALSE, type='text', rownames=FALSE, initial.zero=FALSE, digits=3, title='R-Squared Neighbour')
+
+```
+
+RELIGIOUS PERFORMANCE MODEL
+
+```{r}
+
+rel_data <- cleandat %>%
+  dplyr::select(gender, type_of_area, total_house_members_cat, veg, edu, caste, married,
+                worry_fam_tradition, worry_fam_prob,
+                rel_puja, rel_song, rel_fast, rel_temple, rel_tv, rel_book) %>%
+  na.omit()
+# 
+town <- ifelse(rel_data$type_of_area == 'Town', 1, 0)
+city <- ifelse(rel_data$type_of_area == 'City', 1, 0)
+metro <- ifelse(rel_data$type_of_area == 'Metropolis', 1, 0)
+medium_fam_size <- ifelse(rel_data$total_house_members_cat == 'Medium', 1, 0)
+large_fam_size <- ifelse(rel_data$total_house_members_cat == 'Large', 1, 0)
+pure_veg <- ifelse(rel_data$veg == 'Pure vegetarian', 1, 0)
+veg_with_eggs <- ifelse(rel_data$veg == 'Eggetarian', 1, 0)
+obc <- ifelse(rel_data$caste == 'Other Backward Classes (OBC)', 1, 0)
+open_cat_caste <- ifelse(rel_data$caste == 'Others', 1, 0)
+primary_middle_edu <- ifelse(rel_data$edu == 'Primary pass or Middle pass', 1, 0)
+matric_edu <- ifelse(rel_data$edu == 'Matric pass', 1, 0)
+high_school_edu <- ifelse(rel_data$edu == 'Intermediate/College no degree', 1, 0)
+grad_edu <- ifelse(rel_data$edu == 'Graduate or equivalent', 1, 0)
+post_grad_edu <- ifelse(rel_data$edu == 'Post Graduate or Professional Degree', 1, 0)
+
+
+rel_data <- data.frame(gender = rel_data$gender,
+                       married = rel_data$married,
+                       worry_fam_tradition = rel_data$worry_fam_tradition,
+                       worry_fam_prob = rel_data$worry_fam_prob,
+                       medium_fam_size = medium_fam_size,
+                       large_fam_size = large_fam_size,
+                       town = town,
+                       city = city,
+                       metro = metro,
+                       pure_veg = pure_veg,
+                       veg_with_eggs = veg_with_eggs,
+                       obc = obc,
+                       open_cat_caste = open_cat_caste,
+                       primary_middle_edu = primary_middle_edu,
+                       matric_edu = matric_edu,
+                       high_school_edu = high_school_edu,
+                       grad_edu = grad_edu,
+                       post_grad_edu = post_grad_edu,
+                       rel_puja = rel_data$rel_puja,
+                       rel_song = rel_data$rel_song,
+                       rel_fast = rel_data$rel_fast,
+                       rel_temple = rel_data$rel_temple,
+                       rel_tv = rel_data$rel_tv,
+                       rel_book = rel_data$rel_book)
+
+rel_data <- rel_data %>%
+  mutate(gender = recode(gender, "Male" = 0, "Female" = 1)) %>%
+  mutate(married = recode(married, "Married" = 1, "Not married" = 0)) %>%
+  mutate(worry_fam_tradition = recode(worry_fam_tradition, "Not at all" = 1,
+                                      "Very little" = 2, "Somewhat" = 3,
+                                      "Quite a lot" = 4)) %>%
+  mutate(worry_fam_prob = recode(worry_fam_prob, "Not at all" = 1,
+                                      "Very little" = 2, "Somewhat" = 3,
+                                      "Quite a lot" = 4)) %>%
+  mutate(rel_puja = recode(rel_puja, "Never" = 1,
+                                      "Only on festivals" = 2, "Sometimes" = 3,
+                                      "Regularly" = 4)) %>%
+  mutate(rel_song = recode(rel_song, "Never" = 1,
+                                      "Only on festivals" = 2, "Sometimes" = 3,
+                                      "Regularly" = 4)) %>%
+  mutate(rel_fast = recode(rel_fast, "Never" = 1,
+                                      "Only on festivals" = 2, "Sometimes" = 3,
+                                      "Regularly" = 4)) %>%
+  mutate(rel_temple = recode(rel_temple, "Never" = 1,
+                                      "Only on festivals" = 2, "Sometimes" = 3,
+                                      "Regularly" = 4)) %>%
+  mutate(rel_tv = recode(rel_tv, "Never" = 1,
+                                      "Only on festivals" = 2, "Sometimes" = 3,
+                                      "Regularly" = 4)) %>%
+  mutate(rel_book = recode(rel_book, "Never" = 1,
+                                      "Only on festivals" = 2, "Sometimes" = 3,
+                                      "Regularly" = 4))
+
+
+rel_data <- rel_data %>%
+  mutate(worry_fam_tradition = as.ordered(worry_fam_tradition)) %>%
+  mutate(worry_fam_prob = as.ordered(worry_fam_prob)) %>%
+  mutate(rel_puja = as.ordered(rel_puja)) %>%
+  mutate(rel_song = as.ordered(rel_song)) %>%
+  mutate(rel_fast = as.ordered(rel_fast)) %>%
+  mutate(rel_temple = as.ordered(rel_temple)) %>%
+  mutate(rel_tv = as.ordered(rel_tv)) %>%
+  mutate(rel_book = as.ordered(rel_book))
+#   
+# 
+# md.pattern(rel_data)
+# 
+# saveRDS(rel_data, file="religion.Rda")
+
+# religion <- readRDS(file="religion.Rda")
+
+
+# dictionary_discrimination <- labelled::generate_dictionary(discrimination_data)
+# dictionary_discrimination
+
+## Model specification
+
+rel_model <- '
+  # measurement portion of model
+  fam.worry =~ worry_fam_tradition + worry_fam_prob
+  rel.perform =~ rel_puja + rel_song + rel_fast + rel_temple + rel_tv + rel_book
+ # structural portion of model
+  fam.worry ~ gender + married + town + city + metro + medium_fam_size + large_fam_size + pure_veg + veg_with_eggs + matric_edu + primary_middle_edu + high_school_edu + grad_edu + post_grad_edu + obc + open_cat_caste
+  rel.perform ~ fam.worry + gender + married + town + city + metro + medium_fam_size + large_fam_size + pure_veg + veg_with_eggs + matric_edu + primary_middle_edu + high_school_edu + grad_edu + post_grad_edu + obc + open_cat_caste'
+  
+
+#by default, lavaan uses the marker method so there is no need to multiply the first factor by 1. std.lv = true will standardize all the latent variables
+
+fit.mod.rel <- sem(rel_model, data = religion)
+
+summary(fit.mod.rel, fit.measures=TRUE, standardized=TRUE)
+
+parameterestimates(fit.mod.rel, boot.ci.type = "perc", standardized = TRUE)
+
+# These will run under the MLM specification
+
+fitMeasures(fit.mod.rel, c("rmsea.scaled", "rmsea.ci.lower.scaled", "rmsea.ci.upper.scaled", "rmsea.pvalue.scaled", "cfi.scaled", "srmr"))
+
+# segregating data needed for the regressions
+
+rel_lv_fit <- standardizedsolution (fit.mod.rel, type = "std.all", se = TRUE, zstat = TRUE, pvalue = TRUE, ci = TRUE) %>%
+  filter (op == "=~") %>%
+  dplyr::select (LV=lhs, Item=rhs, Coefficient=est.std, ci.lower, ci.upper, SE=se, Z=z, 'p-value'=pvalue)
+
+saveRDS(rel_lv_fit, file="m4f.Rda")
+
+# m4f <- readRDS(file="m4f.Rda")
+
+# rel_direct_effects_reg <- standardizedsolution(fit.mod.rel, type = "std.all", se = TRUE, zstat = TRUE, pvalue = TRUE, ci = TRUE)%>% 
+#   filter(op == "~") %>% 
+#   dplyr::select(LV=lhs, Item=rhs, Coefficient=est.std, ci.lower, ci.upper, SE=se, Z=z, 'p-value'=pvalue)
+# 
+rel_direct_effects_reg <- standardizedsolution(fit.mod.rel, type = "std.all", se = TRUE, zstat = TRUE, pvalue = TRUE, ci = TRUE) %>%
+  filter(op == "~") %>%
+  dplyr::select(Outcome=lhs, Item=rhs, Coefficient=est.std, ci.lower, ci.upper, SE=se, Z=z, 'p-value'=pvalue) %>%
+  mutate(across(where(is.numeric), round, 3)) %>%
+  mutate(Significance = ifelse(`p-value` < 0.05, 'True', 'False')) %>%
+  mutate(`p-value` = ifelse(`p-value` < 0.05, paste0(`p-value`, "*"), `p-value`))
+# 
+# saveRDS(rel_direct_effects_reg, file="m4r.Rda")
+
+# m4r <- readRDS(file="m4r.Rda")
+
+
+# rel_indirect_effects_reg <- standardizedsolution(fit.mod.rel, type = "std.all", se = TRUE, zstat = TRUE, pvalue = TRUE, ci = TRUE)%>% 
+#   filter(op == ":=") %>% 
+#   dplyr::select(LV=lhs, Item=rhs, Coefficient=est.std, ci.lower, ci.upper, SE=se, Z=z, 'p-value'=pvalue)
+# 
+# rsq_rel <- parameterEstimates(fit.mod.rel, standardized=TRUE, rsquare = TRUE) %>% 
+#   filter(op == "r2") %>% 
+#   dplyr::select(Item=rhs, R2 = est) 
+
+```
+
+Model specification:
+
+Since a large part of Hindu tradition involves ritualistic performance, this model aims to unpack norms around religious performance and what shapes it. To that end, this model outlines the relationship between select exogenous indicators (gender, marital status, type of area where one lives in, family size, education, dietary preferences and caste), worry about family and self-reported religious performance. 
+
+It was hypothesised that being a woman, being married, lower levels of education, larger family size, adhereing to a pure vegetarian diet and living in rural areas would be positively associated with worry about family and with greater adhereance to religious performance. Additionally, greater worry about family would be positively associated with greater religious performance. 
+
+Seeing as the outcome variable has to do with religious performance, six indicators were selected for this model:
+1) rel_puja
+2) rel_song
+3) rel_fast, 
+4) rel_temple
+5) rel_tv
+6) rel_book
+All these items were measured on a Likert scale with higher values indicating higher self-reported frequency of performance. These individual indicators seem to be tapping into something unobservable about religious performance in general, so I used them to construct a latent variable called rel.perform that would act as the endogenous outcome variable in the model.  
+
+First, I examine the measurement model and then delve into the structural model:
+
+
+```{r}
+
+stargazer(rel_lv_fit, summary=FALSE, type='text', rownames=FALSE, initial.zero=FALSE, digits=3, title='Factor loadings Religion')
+
+```
+Measurement model:
+
+The measurement model consists of 2 latent variables, fam.worry and rel.perform. As we can see from the table above, all standardised factor loadings (coefficients) for the measured variables on their latent factors are significant. The size of the coefficients (β range of 0.74 - 1.01 for  fam.worry and a β of 0.68 to 0.78 for rel.perform.) indicates that the magnitude of the relationships between items and factors are adequate. Furthermore, each of these latent factors demonstrated acceptable composite reliability (fam.worry = 0.77; right.wrong.romance = 0.90, rel.perform = 0.84) - VERIFY
+
+
+```{r}
+
+stargazer(rel_direct_effects_reg, summary=FALSE, type='text', rownames=FALSE, initial.zero=FALSE, digits=3, title='SEM Regression Religion')
+
+```
+
+Structural model:
+
+At an overarching level, the relationships between the latent variable fam.worry and all the socioeconomic indicators are of low practical significance in that the coefficients themselves are miniscule. However, when considering directionality, the results are in line with what is expected. I find that being a woman, being married, being a part of a medium or large sized family as compared to small families and being a pure vegetarian or an eggetarian is statistically significantly associated with higher levels of family worry. As seen in the previous models, living in a town or metro (compared to a village, the reference category) is associated with lower levels of family worry. Being a part of the OBC caste or being a part of the open caste categories as compared to being in the SC or ST caste categories are not statistically significantly associated with family worry. There is also no statistically significant association between family worry and levels of education within this model.
+
+Turning to the results specific to rel.perform, a positive coefficient of 0.225 indicates that higher levels of family worry are associated with higher values on self-reported religious performance. In a similar vein, being a woman, being married, being a pure vegetarian or even an eggetarian (compared to a non-veg eater) and hailing from the OBC or open caste categories (as compared to the SC/ST categories) is associated with higher levels of self-reported religios performance. When compared to having little to no education, higher levels of education are positively associated with religious performance, with coefficients for matric_edu, primary_middle_edu, high_school_edu and grad_edu being statistically significant. 
+
+Contrastingly, living in a town compared to a village is negatively associated with religious performance. 
+
+All indices of model fit are within standard/acceptable ranges. (fill in from final table).
+
+Discussion of the results:
+- caste as significant
+- education positively associated with religious performance
+
+SUMMARY TABLES - CAN GO TO THE APPENDIX
+
+```{r}
+
+neighbour_table <- fitMeasures(fit.mod.neighbour, c("rmsea.scaled", "rmsea.ci.lower.scaled", "rmsea.ci.upper.scaled", "rmsea.pvalue.scaled", "cfi.scaled", "tli.scaled", "srmr"))
+rightwrong_table <- fitMeasures(fit.mod.rightwrong, c("rmsea.scaled", "rmsea.ci.lower.scaled", "rmsea.ci.upper.scaled", "rmsea.pvalue.scaled", "cfi.scaled", "tli.scaled", "srmr"))
+maryada_table <- fitMeasures(fit.mod.maryada, c("rmsea.scaled", "rmsea.ci.lower.scaled", "rmsea.ci.upper.scaled", "rmsea.pvalue.scaled", "cfi.scaled", "tli.scaled", "srmr"))
+
+
+
+# Combine the tables using bind_rows
+combined_table <- bind_rows(neighbour_table, rightwrong_table, maryada_table, .id = "Model")
+
+# Rename the columns for better readability
+colnames(combined_table) <- c("Model", "RMSEA", "RMSEA Lower CI", "RMSEA Upper CI", "RMSEA p-value", "CFI", "TLI", "srmr")
+
+# Print the combined table
+kable(combined_table, caption = "All SEM Model Fit Measures", format = "html", align = c("l", "c", "c", "c", "c", "c", "c", "c")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"), full_width = F) %>%
+  row_spec(0, bold = T, color = "white", background = "#E74C3C") %>%
+  column_spec(c(2:8), background = "#FADBD8") 
+
+
+```
+
+
+
+
